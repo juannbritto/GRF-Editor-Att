@@ -9,6 +9,7 @@ using GRF.ContainerFormat.Commands;
 using GRF.FileFormats.RgzFormat;
 using GRF.IO;
 using GRF.GrfSystem;
+using GRF.Core.SafeSave;
 using GRF.Threading;
 using Utilities;
 using Utilities.Extension;
@@ -108,6 +109,10 @@ namespace GRF.Core {
 		/// Gets the header.
 		/// </summary>
 		public virtual GrfHeader Header => _grf.InternalHeader;
+
+		public ContainerWriteClassification WriteClassification => ContainerWritePolicy.Classify(Header);
+
+		public bool CanWriteSafely => WriteClassification.CanWrite;
 
 		/// <summary>
 		/// Gets the file table.
