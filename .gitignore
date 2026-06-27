@@ -3,3 +3,4 @@ artifacts/grf-safe-fixtures/
 **/bin/
 **/obj/
 .dotnet-home/
+.packages/
