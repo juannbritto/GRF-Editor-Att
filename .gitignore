@@ -1,0 +1,5 @@
+artifacts/grf-safe-fixtures/
+**/TestResults/
+**/bin/
+**/obj/
+.dotnet-home/
