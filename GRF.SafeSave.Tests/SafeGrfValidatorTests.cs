@@ -32,7 +32,7 @@ namespace GRF.SafeSave.Tests {
 				expected = SafeSaveManifest.Capture(reopened);
 			}
 
-			SafeSaveValidationReport report = SafeGrfValidator.Validate(path, expected);
+			SafeSaveValidationReport report = new SafeGrfValidator().Validate(path, expected);
 
 			Assert.IsFalse(report.HasErrors, report.ToString());
 		}
@@ -42,7 +42,7 @@ namespace GRF.SafeSave.Tests {
 			string path = Path.Combine(_temporaryDirectory, "truncated.grf");
 			File.WriteAllBytes(path, new byte[20]);
 
-			SafeSaveValidationReport report = SafeGrfValidator.Validate(path, null);
+			SafeSaveValidationReport report = new SafeGrfValidator().Validate(path, null);
 
 			Assert.IsTrue(report.HasErrors);
 			Assert.IsTrue(report.Items.Any(item => item.Code == "header.invalid"));
@@ -87,6 +87,85 @@ namespace GRF.SafeSave.Tests {
 			Assert.IsTrue(report.Items.Any(item => item.Code == "manifest.unexpected"));
 		}
 
+		[TestMethod]
+		public void Layout_reports_partially_overlapping_entries() {
+			var report = new SafeSaveValidationReport();
+			var entries = new[] {
+				CreateEntry("data\\first.txt", 50, 20),
+				CreateEntry("data\\second.txt", 60, 10)
+			};
+
+			new SafeGrfValidator().ValidateLayout(entries, 100, 100, report);
+
+			Assert.IsTrue(report.Items.Any(item => item.Code == "entry.overlap"));
+		}
+
+		[TestMethod]
+		public void Layout_allows_identical_redirected_intervals() {
+			var report = new SafeSaveValidationReport();
+			var entries = new[] {
+				CreateEntry("data\\first.txt", 50, 20),
+				CreateEntry("data\\redirect.txt", 50, 20)
+			};
+
+			new SafeGrfValidator().ValidateLayout(entries, 100, 100, report);
+
+			Assert.IsFalse(report.Items.Any(item => item.Code == "entry.overlap"));
+		}
+
+		[TestMethod]
+		public void Layout_rejects_same_start_with_different_lengths() {
+			var report = new SafeSaveValidationReport();
+			var entries = new[] {
+				CreateEntry("data\\short.txt", 50, 10),
+				CreateEntry("data\\long.txt", 50, 20)
+			};
+
+			new SafeGrfValidator().ValidateLayout(entries, 100, 100, report);
+
+			Assert.IsTrue(report.Items.Any(item => item.Code == "entry.overlap"));
+		}
+
+		[TestMethod]
+		public void Layout_reports_out_of_bounds_entry() {
+			var report = new SafeSaveValidationReport();
+
+			new SafeGrfValidator().ValidateLayout(new[] { CreateEntry("data\\bad.txt", 45, 1) }, 100, 100, report);
+
+			Assert.IsTrue(report.Items.Any(item => item.Code == "entry.bounds"));
+		}
+
+		[TestMethod]
+		public void File_table_records_non_correction_duplicate_paths() {
+			var table = new FileTable(null);
+			table.RegisterLoadedEntry(CreateEntry("data\\same.txt", 50, 10));
+			table.RegisterLoadedEntry(CreateEntry("DATA\\SAME.TXT", 70, 10));
+
+			Assert.AreEqual(1, table.DuplicatePaths.Count);
+			Assert.AreEqual("DATA\\SAME.TXT", table.DuplicatePaths[0]);
+		}
+
+		[TestMethod]
+		public void File_table_does_not_record_intentional_filename_correction() {
+			var table = new FileTable(null);
+			FileEntry corrected = CreateEntry("data\\same.txt", 50, 10);
+			corrected.Modification = Modification.FileNameRenamed;
+			table.RegisterLoadedEntry(corrected);
+
+			table.RegisterLoadedEntry(CreateEntry("data\\same.txt", 70, 10));
+
+			Assert.AreEqual(0, table.DuplicatePaths.Count);
+		}
+
+		[TestMethod]
+		public void Validator_reports_each_duplicate_path() {
+			var report = new SafeSaveValidationReport();
+
+			new SafeGrfValidator().AddDuplicatePathErrors(new[] { "data\\a.txt", "data\\b.txt" }, report);
+
+			Assert.AreEqual(2, report.Items.Count(item => item.Code == "entry.duplicate-path"));
+		}
+
 		private string CreateGrf(string fileName, string relativePath, byte[] data) {
 			string path = Path.Combine(_temporaryDirectory, fileName);
 
@@ -97,6 +176,16 @@ namespace GRF.SafeSave.Tests {
 			}
 
 			return path;
+		}
+
+		private static FileEntry CreateEntry(string path, long offset, int alignment) {
+			return new FileEntry {
+				RelativePath = path,
+				FileExactOffset = offset,
+				SizeCompressed = alignment,
+				SizeCompressedAlignment = alignment,
+				SizeDecompressed = 1
+			};
 		}
 	}
 }

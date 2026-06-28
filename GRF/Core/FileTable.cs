@@ -14,6 +14,9 @@ namespace GRF.Core {
 		public const int StructSize = 8;
 
 		protected GrfHeader _header;
+		private readonly List<string> _duplicatePaths = new List<string>();
+
+		public IReadOnlyList<string> DuplicatePaths => _duplicatePaths.AsReadOnly();
 
 		public FileTable(GrfHeader header) {
 			_header = header;
@@ -117,17 +120,7 @@ namespace GRF.Core {
 					fileEntry.RelativePath = tempName;
 				}
 
-				if (_indexedEntries.ContainsKey(fileEntry.RelativePath)) {
-					FileEntry conflict = _indexedEntries[fileEntry.RelativePath];
-
-					if ((conflict.Modification & Modification.FileNameRenamed) == Modification.FileNameRenamed) {
-						_indexedEntries.Remove(conflict.RelativePath);
-						_indexedEntries[fileEntry.RelativePath] = fileEntry;
-					}
-				}
-				else {
-					_indexedEntries[fileEntry.RelativePath] = fileEntry;
-				}
+				RegisterLoadedEntry(fileEntry);
 			}
 
 			_header.RealFilesCount = filesCount;
@@ -256,17 +249,7 @@ namespace GRF.Core {
 					fileEntry.RelativePath = tempName;
 				}
 
-				if (_indexedEntries.ContainsKey(fileEntry.RelativePath)) {
-					FileEntry conflict = _indexedEntries[fileEntry.RelativePath];
-
-					if ((conflict.Modification & Modification.FileNameRenamed) == Modification.FileNameRenamed) {
-						_indexedEntries.Remove(conflict.RelativePath);
-						_indexedEntries[fileEntry.RelativePath] = fileEntry;
-					}
-				}
-				else {
-					_indexedEntries[fileEntry.RelativePath] = fileEntry;
-				}
+				RegisterLoadedEntry(fileEntry);
 
 				offset = offset2 + 17;
 				filesCount++;
@@ -351,14 +334,7 @@ namespace GRF.Core {
 					}
 
 					if ((fileEntry.Flags & (EntryType.File | EntryType.RawDataFile | EntryType.GravityEncryptedFile)) > 0) {
-						if (_indexedEntries.TryGetValue(fileEntry.RelativePath, out FileEntry conflict)) {
-							if ((conflict.Modification & Modification.FileNameRenamed) == Modification.FileNameRenamed) {
-								_indexedEntries[fileEntry.RelativePath] = fileEntry;
-							}
-						}
-						else {
-							_indexedEntries.SetQuick(fileEntry.RelativePath, fileEntry);
-						}
+						RegisterLoadedEntry(fileEntry);
 					}
 				}
 			}
@@ -642,6 +618,26 @@ namespace GRF.Core {
 
 		public void Clear() {
 			_indexedEntries.Clear();
+			_duplicatePaths.Clear();
+		}
+
+		internal void RegisterLoadedEntry(FileEntry entry) {
+			FileEntry conflict;
+			if (_indexedEntries.TryGetValue(entry.RelativePath, out conflict)) {
+				if ((conflict.Modification & Modification.FileNameRenamed) == Modification.FileNameRenamed) {
+					_indexedEntries[entry.RelativePath] = entry;
+				}
+				else {
+					RecordDuplicatePath(entry.RelativePath);
+				}
+			}
+			else {
+				_indexedEntries.SetQuick(entry.RelativePath, entry);
+			}
+		}
+
+		private void RecordDuplicatePath(string relativePath) {
+			_duplicatePaths.Add(relativePath);
 		}
 
 		internal void ResetTemporaryOffsets() {
