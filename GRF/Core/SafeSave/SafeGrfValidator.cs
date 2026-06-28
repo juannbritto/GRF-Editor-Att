@@ -43,7 +43,7 @@ namespace GRF.Core.SafeSave {
 						}
 					}
 
-					if (expected != null) {
+					if (expected != null && !report.HasErrors) {
 						expected.Compare(holder, report);
 					}
 				}

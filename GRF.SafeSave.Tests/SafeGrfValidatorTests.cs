@@ -50,24 +50,28 @@ namespace GRF.SafeSave.Tests {
 
 		[TestMethod]
 		public void Protected_format_report_includes_reason_code() {
-			string path = Path.Combine(_temporaryDirectory, "protected.grf");
-
-			using (var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-			using (var writer = new BinaryWriter(stream)) {
-				writer.Write(System.Text.Encoding.ASCII.GetBytes(GrfStrings.EventHorizon));
-				writer.Write(new byte[14]);
-				writer.Write((long)0);
-				writer.Write(0);
-				writer.Write(0x300);
-				writer.Write(0);
-				writer.Write(0);
-				writer.Write(0);
-			}
+			string path = CreateEmptyEventHorizon("protected.grf");
 
 			SafeSaveValidationReport report = new SafeGrfValidator().Validate(path, null);
 			SafeSaveValidationItem item = report.Items.Single(candidate => candidate.Code == "format.not-editable");
 
 			Assert.AreEqual("event-horizon", item.Message);
+		}
+
+		[TestMethod]
+		public void Existing_validation_error_skips_manifest_comparison() {
+			string expectedPath = CreateGrf("expected-classic.grf", "data\\expected.txt", new byte[] { 1 });
+			string protectedPath = CreateEmptyEventHorizon("protected-with-manifest.grf");
+			SafeSaveManifest expected;
+
+			using (var expectedHolder = new GrfHolder(expectedPath)) {
+				expected = SafeSaveManifest.Capture(expectedHolder);
+			}
+
+			SafeSaveValidationReport report = new SafeGrfValidator().Validate(protectedPath, expected);
+
+			Assert.IsTrue(report.Items.Any(item => item.Code == "format.not-editable"));
+			Assert.IsFalse(report.Items.Any(item => item.Code.StartsWith("manifest.", StringComparison.Ordinal)), report.ToString());
 		}
 
 		[TestMethod]
@@ -195,6 +199,24 @@ namespace GRF.SafeSave.Tests {
 				holder.New(path);
 				holder.Commands.AddFile(relativePath, data);
 				holder.SaveAs(path);
+			}
+
+			return path;
+		}
+
+		private string CreateEmptyEventHorizon(string fileName) {
+			string path = Path.Combine(_temporaryDirectory, fileName);
+
+			using (var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+			using (var writer = new BinaryWriter(stream)) {
+				writer.Write(System.Text.Encoding.ASCII.GetBytes(GrfStrings.EventHorizon));
+				writer.Write(new byte[14]);
+				writer.Write((long)0);
+				writer.Write(0);
+				writer.Write(0x300);
+				writer.Write(0);
+				writer.Write(0);
+				writer.Write(0);
 			}
 
 			return path;
