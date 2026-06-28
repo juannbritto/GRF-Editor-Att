@@ -49,6 +49,28 @@ namespace GRF.SafeSave.Tests {
 		}
 
 		[TestMethod]
+		public void Protected_format_report_includes_reason_code() {
+			string path = Path.Combine(_temporaryDirectory, "protected.grf");
+
+			using (var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+			using (var writer = new BinaryWriter(stream)) {
+				writer.Write(System.Text.Encoding.ASCII.GetBytes(GrfStrings.EventHorizon));
+				writer.Write(new byte[14]);
+				writer.Write((long)0);
+				writer.Write(0);
+				writer.Write(0x300);
+				writer.Write(0);
+				writer.Write(0);
+				writer.Write(0);
+			}
+
+			SafeSaveValidationReport report = new SafeGrfValidator().Validate(path, null);
+			SafeSaveValidationItem item = report.Items.Single(candidate => candidate.Code == "format.not-editable");
+
+			Assert.AreEqual("event-horizon", item.Message);
+		}
+
+		[TestMethod]
 		public void Manifest_compare_reports_hash_mismatch() {
 			string expectedPath = CreateGrf("expected.grf", "data\\same.txt", new byte[] { 1, 2, 3 });
 			string actualPath = CreateGrf("actual.grf", "data\\same.txt", new byte[] { 3, 2, 1 });

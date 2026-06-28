@@ -16,8 +16,9 @@ namespace GRF.Core.SafeSave {
 
 				long fileLength = new FileInfo(path).Length;
 				using (var holder = new GrfHolder(path)) {
-					if (holder.WriteClassification.Capability != ContainerWriteCapability.Editable) {
-						report.Add(SafeSavePhase.Validate, SafeSaveSeverity.Error, "format.not-editable", path, "The container format is not safely editable.");
+					ContainerWriteClassification classification = holder.WriteClassification;
+					if (classification.Capability != ContainerWriteCapability.Editable) {
+						report.Add(SafeSavePhase.Validate, SafeSaveSeverity.Error, "format.not-editable", path, classification.ReasonCode);
 					}
 
 					long tableStart = holder.Header.FileTableOffset > long.MaxValue - GrfHeader.DataByteSize
