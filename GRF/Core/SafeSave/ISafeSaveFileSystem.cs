@@ -5,6 +5,6 @@ namespace GRF.Core.SafeSave {
 		long AvailableFreeSpace(string directory);
 		void DeleteOwnedTemporary(string path);
 		void MoveNew(string temporaryPath, string destinationPath);
-		void ReplaceExisting(string temporaryPath, string destinationPath, string backupPath);
+		string ReplaceExisting(string temporaryPath, string destinationPath, string backupPath);
 	}
 }
