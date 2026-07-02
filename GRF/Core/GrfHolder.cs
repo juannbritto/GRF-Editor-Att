@@ -1064,6 +1064,17 @@ namespace GRF.Core {
 			}
 		}
 
+		public SafeSaveValidationReport RestoreBackup(string backupPath = null) {
+			if (IsClosed) throw new InvalidOperationException("A GRF must be open before restoring a backup.");
+
+			string destination = FileName;
+			string backup = backupPath ?? destination + SafeSaveOptions.BackupSuffix;
+			Close();
+			SafeSaveValidationReport report = new SafeSaveRecoveryService().RestoreBackup(destination, backup);
+			if (File.Exists(destination)) Open(destination);
+			return report;
+		}
+
 		internal static SafeSaveOutcome CreateFromBufferedFilesSafely(string fileName, List<FileEntry> entries,
 			SafeSaveCoordinator coordinator, Func<string, SafeSaveManifest, SafeSaveValidationReport> validator,
 			SafeSaveOptions options) {

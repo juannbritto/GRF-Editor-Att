@@ -24,6 +24,10 @@ preservando o crédito e o histórico do trabalho original.
   antes de substituir o destino.
 - Substituição atômica com backup e rollback, reduzindo o risco de corromper uma
   GRF caso o processo seja interrompido ou o disco apresente erro.
+- Restauração validada de backups sem consumir o `.bak`, com ponto de restauração
+  mantido até a confirmação estrutural da GRF recuperada.
+- Descoberta restrita de temporários pertencentes ao salvamento seguro, evitando
+  confundir ou remover arquivos semelhantes criados pelo usuário.
 - Proteção contra alteração concorrente: identidade do arquivo, tamanho, data,
   cabeçalho e política de formato são conferidos novamente no momento da troca.
 - Validação estrutural de GRF/GPF e dos contêineres auxiliares usados por THOR.
