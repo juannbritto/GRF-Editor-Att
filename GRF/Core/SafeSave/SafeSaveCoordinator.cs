@@ -3,12 +3,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using GRF.ContainerFormat;
 
 namespace GRF.Core.SafeSave {
 	internal sealed class SafeSaveRequest {
 		public string DestinationPath { get; set; }
 		public SafeSaveOptions Options { get; set; }
 		public long EstimatedLength { get; set; }
+		public Action<string, bool> ValidateDestination { get; set; }
+		public Action<string, bool> ValidateDestinationBeforePromote { get; set; }
+		public Func<string, object> CaptureDestinationStamp { get; set; }
+		public Func<string, object, bool> VerifyReplacedDestination { get; set; }
 		public Action<string> WriteTemporary { get; set; }
 		public Func<string, SafeSaveValidationReport> ValidateTemporary { get; set; }
 	}
@@ -87,6 +92,8 @@ namespace GRF.Core.SafeSave {
 
 			try {
 				NotifyPhase(SafeSavePhase.Preflight, destinationPath, reservedPaths, options, report, ref currentPhase);
+				bool destinationExists = _fileSystem.Exists(destinationPath);
+				request.ValidateDestination?.Invoke(destinationPath, destinationExists);
 				if (request.EstimatedLength < 0) {
 					report.Add(currentPhase, SafeSaveSeverity.Error, "estimated-length.invalid", destinationPath,
 						"Estimated length cannot be negative.");
@@ -94,7 +101,6 @@ namespace GRF.Core.SafeSave {
 				}
 
 				string directory = Path.GetDirectoryName(destinationPath);
-				bool destinationExists = _fileSystem.Exists(destinationPath);
 				long existingLength = destinationExists ? _fileSystem.Length(destinationPath) : 0;
 				long requiredSpace = Math.Max(Math.Max(request.EstimatedLength, existingLength), MinimumFreeSpace);
 				if (_fileSystem.AvailableFreeSpace(directory) < requiredSpace) {
@@ -113,18 +119,44 @@ namespace GRF.Core.SafeSave {
 				if (validationReport != null) report.Items.AddRange(validationReport.Items);
 				if (report.HasErrors) return outcome;
 
-				string backupPath = destinationExists && options.CreateBackup
+				NotifyPhase(SafeSavePhase.Backup, destinationPath, reservedPaths, options, report, ref currentPhase);
+				NotifyPhase(SafeSavePhase.Promote, destinationPath, reservedPaths, options, report, ref currentPhase);
+				bool currentDestinationExists = _fileSystem.Exists(destinationPath);
+				request.ValidateDestinationBeforePromote?.Invoke(destinationPath, currentDestinationExists);
+				string backupPath = currentDestinationExists && options.CreateBackup
 					? canonicalBackupPath
 					: null;
 				outcome.BackupPath = backupPath;
 
-				NotifyPhase(SafeSavePhase.Backup, backupPath ?? destinationPath, reservedPaths, options, report, ref currentPhase);
-				NotifyPhase(SafeSavePhase.Promote, destinationPath, reservedPaths, options, report, ref currentPhase);
-				if (destinationExists) {
-					string retainedPreviousBackup = _fileSystem.ReplaceExisting(temporaryPath, destinationPath, backupPath);
-					if (retainedPreviousBackup != null) {
+				if (currentDestinationExists) {
+					object destinationStamp = request.CaptureDestinationStamp?.Invoke(destinationPath);
+					string operationBackupPath = backupPath ?? destinationPath + ".guard-safe-save-" + Guid.NewGuid().ToString("N") + ".bak";
+					SafeSaveReplaceResult replaceResult = _fileSystem.ReplaceExistingGuarded(temporaryPath,
+						destinationPath, operationBackupPath, backupPath != null);
+					if (request.VerifyReplacedDestination != null &&
+						!request.VerifyReplacedDestination(replaceResult.OperationBackupPath, destinationStamp)) {
+						string recoveryPath;
+						try {
+							recoveryPath = _fileSystem.RollbackConcurrentReplacement(destinationPath, replaceResult);
+						}
+						catch (SafeSaveConcurrentRecoveryException exception) {
+							canDeleteTemporary = false;
+							outcome.Error = exception;
+							report.Add(currentPhase, SafeSaveSeverity.Error, "destination.concurrent-recovery-failed",
+								exception.RecoveryPath ?? destinationPath, exception.Message);
+							report.Add(currentPhase, SafeSaveSeverity.Warning, "destination.concurrent-operation-backup",
+								exception.OperationBackupPath, "The exact replaced destination backup was retained for recovery.");
+							return outcome;
+						}
+						outcome.BackupPath = replaceResult.RetainedPreviousBackupPath;
+						report.Add(currentPhase, SafeSaveSeverity.Error, "destination.concurrent-change", recoveryPath,
+							"The destination changed during save. The exact replaced file was restored and the validated output was retained.");
+						return outcome;
+					}
+					_fileSystem.CompleteGuardedReplace(replaceResult);
+					if (replaceResult.RetainedPreviousBackupPath != null) {
 						report.Add(SafeSavePhase.Promote, SafeSaveSeverity.Warning, "backup.previous-retained",
-							retainedPreviousBackup, "The previous backup could not be removed and was retained for recovery.");
+							replaceResult.RetainedPreviousBackupPath, "The previous backup could not be removed and was retained for recovery.");
 					}
 				}
 				else {
@@ -145,6 +177,11 @@ namespace GRF.Core.SafeSave {
 						exception.RetainedPreviousBackupPath,
 						"The previous backup was retained under a unique recovery name.");
 				}
+			}
+			catch (SafeSaveFormatReadOnlyException exception) {
+				outcome.Error = exception;
+				report.Add(currentPhase, SafeSaveSeverity.Error, "format.not-editable", destinationPath,
+					exception.ReasonCode);
 			}
 			catch (Exception exception) {
 				if (currentPhase == SafeSavePhase.Promote && _fileSystem.Exists(temporaryPath)) {

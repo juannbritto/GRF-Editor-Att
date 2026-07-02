@@ -177,5 +177,57 @@ namespace GRF.Core.SafeSave {
 
 			return null;
 		}
+
+		public SafeSaveReplaceResult ReplaceExistingGuarded(string temporaryPath, string destinationPath,
+			string operationBackupPath, bool userBackupRequested) {
+			string retainedPrevious = null;
+			if (File.Exists(operationBackupPath)) {
+				retainedPrevious = operationBackupPath + ".previous-safe-save-" + Guid.NewGuid().ToString("N");
+				File.Move(operationBackupPath, retainedPrevious);
+			}
+			try {
+				ReplaceExisting(temporaryPath, destinationPath, operationBackupPath);
+			}
+			catch (SafeSavePromotionException exception) {
+				if (retainedPrevious == null || exception.RetainedPreviousBackupPath != null) throw;
+				throw new SafeSavePromotionException(exception.Message, exception.InnerException,
+					exception.CanDeleteTemporary, exception.RecoveryCode, exception.RecoveryPath,
+					retainedPrevious, exception.ActualBackupPath);
+			}
+			return new SafeSaveReplaceResult(operationBackupPath, retainedPrevious, userBackupRequested);
+		}
+
+		public void CompleteGuardedReplace(SafeSaveReplaceResult replaceResult) {
+			if (replaceResult == null) throw new ArgumentNullException(nameof(replaceResult));
+			if (replaceResult.RetainedPreviousBackupPath != null) {
+				try {
+					File.Delete(replaceResult.RetainedPreviousBackupPath);
+					replaceResult.PreviousBackupRemoved();
+				}
+				catch (IOException) { }
+				catch (UnauthorizedAccessException) { }
+			}
+			if (!replaceResult.UserBackupRequested && File.Exists(replaceResult.OperationBackupPath)) {
+				try {
+					File.Delete(replaceResult.OperationBackupPath);
+				}
+				catch (IOException) { }
+				catch (UnauthorizedAccessException) { }
+			}
+		}
+
+		public string RollbackConcurrentReplacement(string destinationPath, SafeSaveReplaceResult replaceResult) {
+			if (replaceResult == null) throw new ArgumentNullException(nameof(replaceResult));
+			string recoveryPath = destinationPath + ".concurrent-recovery-safe-save-" + Guid.NewGuid().ToString("N") + ".grf";
+			try {
+				_replace(replaceResult.OperationBackupPath, destinationPath, recoveryPath, true);
+				return recoveryPath;
+			}
+			catch (Exception exception) {
+				throw new SafeSaveConcurrentRecoveryException(
+					"The destination changed during save and automatic rollback could not be completed. Recovery artifacts were preserved.",
+					recoveryPath, replaceResult.OperationBackupPath, exception);
+			}
+		}
 	}
 }

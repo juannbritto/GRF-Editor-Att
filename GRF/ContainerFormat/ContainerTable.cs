@@ -15,6 +15,7 @@ namespace GRF.ContainerFormat {
 	public class ContainerTable<TEntry> : IEnumerable<TEntry> where TEntry : ContainerEntry {
 		protected TableDictionary<TEntry> _indexedEntries = new TableDictionary<TEntry>();
 		private Dictionary<string, Stream> _lockedFiles = new Dictionary<string, Stream>();
+		internal Func<string, Stream> RestoreLockedFileOpener { get; set; } = File.OpenRead;
 
 		/// <summary>
 		/// Gets the entry with the specified key.
@@ -642,6 +643,39 @@ namespace GRF.ContainerFormat {
 
 		internal void InvalidateInternalSets() {
 			_indexedEntries.HasBeenModified = true;
+		}
+
+		internal List<KeyValuePair<string, TEntry>> CaptureEntryReferences() {
+			return _indexedEntries.ToList();
+		}
+
+		internal List<string> CaptureLockedFilePaths() {
+			return _lockedFiles.Keys.ToList();
+		}
+
+		internal bool RestoreEntryReferences(IEnumerable<KeyValuePair<string, TEntry>> entries,
+			IEnumerable<string> lockedFilePaths) {
+			bool restored = true;
+			foreach (Stream stream in _lockedFiles.Values) stream.Close();
+			_lockedFiles.Clear();
+			_indexedEntries.Clear();
+			foreach (KeyValuePair<string, TEntry> entry in entries) _indexedEntries[entry.Key] = entry.Value;
+
+			foreach (string path in lockedFilePaths) {
+				try {
+					if (File.Exists(path)) {
+						Stream stream = RestoreLockedFileOpener(path);
+						if (stream == null) restored = false;
+						else _lockedFiles[path] = stream;
+					}
+					else restored = false;
+				}
+				catch {
+					restored = false;
+				}
+			}
+			_indexedEntries.HasBeenModified = true;
+			return restored;
 		}
 
 		internal virtual TEntry Replace(string grfPath, string filePath, string fileName) {

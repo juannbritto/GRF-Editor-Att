@@ -19,4 +19,15 @@ namespace GRF.Core.SafeSave {
 		internal string RetainedPreviousBackupPath { get; }
 		internal string ActualBackupPath { get; }
 	}
+
+	internal sealed class SafeSaveConcurrentRecoveryException : IOException {
+		internal SafeSaveConcurrentRecoveryException(string message, string recoveryPath,
+			string operationBackupPath, Exception innerException) : base(message, innerException) {
+			RecoveryPath = recoveryPath;
+			OperationBackupPath = operationBackupPath;
+		}
+
+		internal string RecoveryPath { get; }
+		internal string OperationBackupPath { get; }
+	}
 }

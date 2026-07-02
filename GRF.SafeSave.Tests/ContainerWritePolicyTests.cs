@@ -32,5 +32,13 @@ namespace GRF.SafeSave.Tests {
 			Assert.AreEqual(ContainerWriteCapability.ReadOnlyUnknown, headerErrors.Capability);
 			Assert.AreEqual("header-errors", headerErrors.ReasonCode);
 		}
+
+		[TestMethod]
+		public void Classic_magic_with_unsupported_version_has_specific_reason() {
+			ContainerWriteClassification classification = ContainerWritePolicy.Classify(GrfStrings.MasterOfMagic, 3, 0, false);
+
+			Assert.AreEqual(ContainerWriteCapability.ReadOnlyUnknown, classification.Capability);
+			Assert.AreEqual("unsupported-version", classification.ReasonCode);
+		}
 	}
 }

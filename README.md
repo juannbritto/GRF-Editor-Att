@@ -1,4 +1,54 @@
-# GRFEditor
+# GRF Editor Att
+
+Atualização comunitária do **GRF Editor**, editor de arquivos GRF, GPF e THOR do
+Ragnarok Online. Este projeto mantém compatibilidade com a estrutura clássica dos
+arquivos e prioriza operações seguras para ambientes atuais, incluindo Ragnarok
+LATAM, iRO e servidores privados baseados em rAthena/Hercules.
+
+O projeto deriva do [GRFEditor original](https://github.com/Tokeiburu/GRFEditor).
+O objetivo é modernizar sua base com melhorias graduais, auditáveis e testadas,
+preservando o crédito e o histórico do trabalho original.
+
+## Princípios de segurança
+
+- Nunca editar uma GRF de referência ou de instalação diretamente durante testes.
+- Trabalhar em cópias e promover o resultado somente após validação completa.
+- Preservar cabeçalho, tabela de arquivos, codificação de nomes e regras esperadas
+  pelos clientes de Ragnarok.
+- Bloquear gravação em formatos desconhecidos, protegidos ou não suportados.
+- Manter artefatos de recuperação quando uma substituição não puder ser concluída.
+
+## Mudanças desta atualização
+
+- Salvamento transacional: a nova GRF é escrita e validada em arquivo temporário
+  antes de substituir o destino.
+- Substituição atômica com backup e rollback, reduzindo o risco de corromper uma
+  GRF caso o processo seja interrompido ou o disco apresente erro.
+- Proteção contra alteração concorrente: identidade do arquivo, tamanho, data,
+  cabeçalho e política de formato são conferidos novamente no momento da troca.
+- Validação estrutural de GRF/GPF e dos contêineres auxiliares usados por THOR.
+- Preservação do estado interno do editor quando uma gravação falha.
+- Tratamento seguro do índice `files.enc` e dos fluxos de criptografia existentes.
+- Limite configurável de memória para entradas grandes, evitando consumo excessivo
+  durante validação e salvamento.
+- Remoção de exclusões antecipadas no editor de mapas; os arquivos só são trocados
+  após a nova saída estar pronta.
+- Cobertura automatizada para salvamento, rollback, formatos protegidos, alteração
+  concorrente e integração com `GrfHolder`.
+
+Essas mudanças existem porque o fluxo antigo podia modificar o destino durante a
+gravação e deixá-lo incompleto em caso de falha. A nova abordagem trata a GRF como
+um artefato imutável até que a saída substituta tenha sido verificada.
+
+## Estado e compatibilidade
+
+Esta atualização ainda está em desenvolvimento. Antes de usar uma versão em uma
+instalação real, faça backup e valide a cópia no cliente/servidor desejado. Arquivos
+Event Horizon, formatos desconhecidos e variantes sem suporte permanecem somente
+para leitura por segurança.
+
+## GRF library (documentação original)
+
 An editor for the GRF/GPF/Thor file formats from Ragnarok Online.
 
 ### Using the GRF library

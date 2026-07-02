@@ -494,7 +494,6 @@ namespace GRFEditor.Tools.Map {
 				List<FileEntry> entries = new List<FileEntry>();
 				var textStream = new FileStream(Path.Combine(Settings.TempPath, "~fmtmp_textures"), FileMode.Create);
 				streams[-1] = textStream;
-				GrfPath.Delete(_mapEditor.OutputMapPath);
 				
 				threadPool.Initialize(this, files, (file, thread) => {
 					try {

@@ -1,5 +1,6 @@
 ﻿using GRF.Core;
 using System;
+using GRF.Core.SafeSave;
 
 namespace GRF.ContainerFormat {
 	public class ContainerSaveResult {
@@ -23,6 +24,9 @@ namespace GRF.ContainerFormat {
 		public Exception Error { get; set; }
 		public bool IsCancelled { get; set; }
 		public bool RequiresReload { get; set; }
+		public SafeSaveValidationReport SafeSaveReport { get; set; }
+		public string BackupFileName { get; set; }
+		public string TemporaryFileName { get; set; }
 
 		public void Fail(Exception err) {
 			Success = false;

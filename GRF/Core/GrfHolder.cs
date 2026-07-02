@@ -114,6 +114,11 @@ namespace GRF.Core {
 
 		public bool CanWriteSafely => WriteClassification.CanWrite;
 
+		public SafeSaveOptions SafeSaveOptions {
+			get => _grf.SafeSaveOptions;
+			set => _grf.SafeSaveOptions = value ?? new SafeSaveOptions();
+		}
+
 		/// <summary>
 		/// Gets the file table.
 		/// </summary>
@@ -330,19 +335,24 @@ namespace GRF.Core {
 
 		internal static void WriteEncryptionIndex(Container container, string fileUid) {
 			try {
-				using (GrfHolder grf = new GrfHolder(GrfStrings.EncryptionDbPath, GrfLoadOptions.OpenOrNew)) {
-					StringBuilder files = new StringBuilder();
-
-					foreach (var entry in container.Table.Entries.Where(p => p.Encrypted)) {
-						files.AppendLine(entry.RelativePath);
-					}
-
-					grf.Commands.AddFile(fileUid, Encoding.Default.GetBytes(files.ToString()));
-					grf.Save();
-				}
+				WriteEncryptionIndexOrThrow(container, fileUid);
 			}
 			catch {
 				// Ignore any potential errors
+			}
+		}
+
+		internal static void WriteEncryptionIndexOrThrow(Container container, string fileUid) {
+			using (GrfHolder grf = new GrfHolder(GrfStrings.EncryptionDbPath, GrfLoadOptions.OpenOrNew)) {
+				StringBuilder files = new StringBuilder();
+
+				foreach (var entry in container.Table.Entries.Where(p => p.Encrypted)) {
+					files.AppendLine(entry.RelativePath);
+				}
+
+				grf.Commands.AddFile(fileUid, Encoding.Default.GetBytes(files.ToString()));
+				ContainerSaveResult saveResult = grf.Save();
+				if (!saveResult.Success) throw saveResult.Error ?? new IOException("Could not persist the encryption index.");
 			}
 		}
 
@@ -429,7 +439,7 @@ namespace GRF.Core {
 					mode = SavingMode.Thor;
 					break;
 				default:
-					mode = SavingMode.FileEdit;
+					mode = SavingMode.FileCopy;
 					break;
 			}
 
@@ -573,7 +583,7 @@ namespace GRF.Core {
 			switch (FileName.GetExtension()) {
 				case ".grf":
 				case ".gpf":
-					return _grf.Save(null, grfAdd?.Container, SavingMode.FileEdit, syncMode);
+					return _grf.Save(null, grfAdd?.Container, SavingMode.FileCopy, syncMode);
 				default:
 					throw GrfExceptions.__MergeNotSupported.Create();
 			}
@@ -1039,6 +1049,82 @@ namespace GRF.Core {
 		}
 
 		public static void CreateFromBufferedFiles(string fileName, List<FileEntry> entries) {
+			List<FileEntry> workingEntries = entries.Select(entry => (FileEntry)entry.Copy()).ToList();
+			string extension = fileName.GetExtension();
+			if (extension != ".grf" && extension != ".gpf") {
+				_writeBufferedArchive(fileName, workingEntries);
+				_cleanupBufferedSources(entries, null, fileName);
+				return;
+			}
+
+			SafeSaveOutcome outcome = CreateFromBufferedFilesSafely(fileName, entries, new SafeSaveCoordinator(),
+				(path, manifest) => new SafeGrfValidator().Validate(path, manifest), new SafeSaveOptions());
+			if (!outcome.Success) {
+				throw outcome.Error ?? new IOException("Safe buffered GRF creation failed validation. " + outcome.Report);
+			}
+		}
+
+		internal static SafeSaveOutcome CreateFromBufferedFilesSafely(string fileName, List<FileEntry> entries,
+			SafeSaveCoordinator coordinator, Func<string, SafeSaveManifest, SafeSaveValidationReport> validator,
+			SafeSaveOptions options) {
+			if (coordinator == null) throw new ArgumentNullException(nameof(coordinator));
+			if (validator == null) throw new ArgumentNullException(nameof(validator));
+			List<FileEntry> workingEntries = entries.Select(entry => (FileEntry)entry.Copy()).ToList();
+			SafeSaveManifest manifest = SafeSaveManifest.CaptureBufferedEntries(workingEntries);
+			long estimatedLength = entries.Select(entry => entry.SourceFilePath).Distinct(StringComparer.OrdinalIgnoreCase)
+				.Sum(path => new FileInfo(path).Length) + GrfHeader.DataByteSize;
+
+			SafeSaveOutcome outcome = coordinator.Execute(new SafeSaveRequest {
+				DestinationPath = fileName,
+				Options = options ?? new SafeSaveOptions(),
+				EstimatedLength = Math.Max(estimatedLength, GrfHeader.DataByteSize),
+				ValidateDestination = _ensureExistingBufferedDestinationIsWritable,
+				ValidateDestinationBeforePromote = _ensureExistingBufferedDestinationIsWritable,
+				CaptureDestinationStamp = path => SafeSaveDestinationStamp.CaptureGrf(path),
+				VerifyReplacedDestination = (path, stamp) => _matchesEditableDestinationStamp(path, stamp),
+				WriteTemporary = temporary => _writeBufferedArchive(temporary, workingEntries),
+				ValidateTemporary = temporary => validator(temporary, manifest)
+			});
+			if (outcome.Success) _cleanupBufferedSources(entries, outcome.Report, fileName,
+				outcome.BackupPath, outcome.TemporaryPath);
+			return outcome;
+		}
+
+		private static bool _matchesEditableDestinationStamp(string path, object stamp) {
+			var expected = stamp as SafeSaveDestinationStamp;
+			if (expected == null) return false;
+			SafeSaveDestinationStamp actual = SafeSaveDestinationStamp.CaptureGrf(path);
+			return actual.IsEditable && expected.Matches(actual);
+		}
+
+		private static void _cleanupBufferedSources(IEnumerable<FileEntry> entries, SafeSaveValidationReport report,
+			params string[] protectedPaths) {
+			var resolver = new SafeSavePathIdentityResolver();
+			var protectedIdentities = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+			foreach (string path in protectedPaths.Concat(report?.Items.Select(item => item.Path) ?? Enumerable.Empty<string>())) {
+				if (string.IsNullOrEmpty(path)) continue;
+				try { protectedIdentities.Add(resolver.Resolve(path)); } catch { }
+			}
+			foreach (string sourcePath in entries.Select(entry => entry.SourceFilePath)
+				.Where(path => !string.IsNullOrEmpty(path)).Distinct(StringComparer.OrdinalIgnoreCase)) {
+				try {
+					if (protectedIdentities.Contains(resolver.Resolve(sourcePath))) continue;
+					if (File.Exists(sourcePath)) File.Delete(sourcePath);
+				}
+				catch (Exception exception) {
+					report?.Add(SafeSavePhase.Confirm, SafeSaveSeverity.Warning, "buffer.cleanup-failed",
+						sourcePath, exception.Message);
+				}
+			}
+		}
+
+		private static void _ensureExistingBufferedDestinationIsWritable(string fileName, bool destinationExists) {
+			if (!destinationExists) return;
+			ContainerWriteClassification classification = ContainerWritePolicy.ClassifyFileHeader(fileName);
+			if (!classification.CanWrite) throw new SafeSaveFormatReadOnlyException(classification);
+		}
+
+		private static void _writeBufferedArchive(string fileName, List<FileEntry> entries) {
 			Container container = new Container();
 			GrfHeader header = new GrfHeader(container);
 			container.InternalHeader = header;
@@ -1047,55 +1133,58 @@ namespace GRF.Core {
 			Dictionary<string, FileStream> streams = new Dictionary<string, FileStream>();
 			Dictionary<string, List<FileEntry>> subEntries = new Dictionary<string, List<FileEntry>>();
 
-			foreach (var entry in entries) {
-				entry.Header = header;
+			try {
+				foreach (var entry in entries) {
+					entry.Header = header;
 
-				if (!streams.ContainsKey(entry.SourceFilePath)) {
-					streams[entry.SourceFilePath] = new FileStream(entry.SourceFilePath, FileMode.Open);
+					if (!streams.ContainsKey(entry.SourceFilePath)) {
+						streams[entry.SourceFilePath] = new FileStream(entry.SourceFilePath, FileMode.Open);
+					}
+
+					if (!subEntries.ContainsKey(entry.SourceFilePath)) {
+						subEntries[entry.SourceFilePath] = new List<FileEntry>();
+					}
+
+					subEntries[entry.SourceFilePath].Add(entry);
+					container.InternalTable.AddEntry(entry);
 				}
 
-				if (!subEntries.ContainsKey(entry.SourceFilePath)) {
-					subEntries[entry.SourceFilePath] = new List<FileEntry>();
-				}
+				using (FileStream output = new FileStream(fileName, FileMode.Create)) {
+					output.SetLength(GrfHeader.DataByteSize);
+					output.Seek(GrfHeader.DataByteSize, SeekOrigin.Begin);
 
-				subEntries[entry.SourceFilePath].Add(entry);
-				container.InternalTable.AddEntry(entry);
-			}
+					long baseOffset;
 
-			using (FileStream output = new FileStream(fileName, FileMode.Create)) {
-				output.SetLength(GrfHeader.DataByteSize);
-				output.Seek(GrfHeader.DataByteSize, SeekOrigin.Begin);
+					foreach (var list in subEntries) {
+						var stream = streams[list.Key];
 
-				long baseOffset;
+						const int BufferCopyLength = 2097152;
+						byte[] buffer = new byte[BufferCopyLength];
+						baseOffset = output.Position;
 
-				foreach (var list in subEntries) {
-					var stream = streams[list.Key];
-
-					const int BufferCopyLength = 2097152;
-					byte[] buffer = new byte[BufferCopyLength];
-					baseOffset = output.Position;
-
-					using (FileStream file = stream) {
-						int len;
-						while ((len = file.Read(buffer, 0, BufferCopyLength)) > 0) {
-							output.Write(buffer, 0, len);
+						using (FileStream file = stream) {
+							int len;
+							while ((len = file.Read(buffer, 0, BufferCopyLength)) > 0) {
+								output.Write(buffer, 0, len);
+							}
+						}
+						foreach (var entry in list.Value) {
+							entry.TemporaryOffset += baseOffset;
 						}
 					}
-					File.Delete(stream.Name);
 
-					foreach (var entry in list.Value) {
-						entry.TemporaryOffset += baseOffset;
-					}
+					header.FileTableOffset = (uint)output.Position - GrfHeader.DataByteSize;
+					header.RealFilesCount = container.Table.Entries.Count;
+
+					int tableSize = container.InternalTable.WriteMetadata(header, output);
+
+					output.Seek(0, SeekOrigin.Begin);
+					header.Write(output);
+					output.SetLength(header.FileTableOffset + GrfHeader.DataByteSize + tableSize);
 				}
-
-				header.FileTableOffset = (uint)output.Position - GrfHeader.DataByteSize;
-				header.RealFilesCount = container.Table.Entries.Count;
-
-				int tableSize = container.InternalTable.WriteMetadata(header, output);
-
-				output.Seek(0, SeekOrigin.Begin);
-				header.Write(output);
-				output.SetLength(header.FileTableOffset + GrfHeader.DataByteSize + tableSize);
+			}
+			finally {
+				foreach (FileStream stream in streams.Values) stream.Dispose();
 			}
 		}
 

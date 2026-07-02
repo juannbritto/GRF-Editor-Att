@@ -25,10 +25,16 @@ namespace GRF.Core.GrfWriters {
 
 				string tempFile = Path.Combine(Settings.TempPath, GrfStrings.EncryptionFilename);
 				File.WriteAllBytes(tempFile, data);
-				grf.Table.Add(GrfPath.Combine(IsRgz(grf) ? GrfStrings.RgzRoot : "", GrfStrings.EncryptionFilename), tempFile, true);
+				string encryptionPath = GrfPath.Combine(IsRgz(grf) ? GrfStrings.RgzRoot : "", GrfStrings.EncryptionFilename);
+				FileEntry existing = grf.Table.TryGet(encryptionPath);
+				if (existing == null || existing.IsRemoved || !existing.IsAdded ||
+					!string.Equals(existing.SourceFilePath, tempFile, StringComparison.OrdinalIgnoreCase)) {
+					grf.Table.Add(encryptionPath, tempFile, true);
+				}
 			}
 			else {
-				grf.Table.DeleteFile(GrfStrings.EncryptionFilename);
+				FileEntry existing = grf.Table.TryGet(GrfStrings.EncryptionFilename);
+				if (existing != null && !existing.IsRemoved) grf.Table.DeleteFile(GrfStrings.EncryptionFilename);
 			}
 		}
 

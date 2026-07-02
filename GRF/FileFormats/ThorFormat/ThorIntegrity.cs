@@ -35,10 +35,8 @@ namespace GRF.FileFormats.ThorFormat {
 				builder.AppendLine(hash.Value);
 			}
 
-			// Unlocks the GRF
-			grf.IsBusy = false;
-			grf.Commands.AddFile(GrfStrings.GrfIntegrityFile, EncodingService.DisplayEncoding.GetBytes(builder.ToString()));
-			grf.IsBusy = true;
+			using (grf.AuthorizeInternalMutation())
+				grf.Commands.AddFile(GrfStrings.GrfIntegrityFile, EncodingService.DisplayEncoding.GetBytes(builder.ToString()));
 			return true;
 		}
 	}

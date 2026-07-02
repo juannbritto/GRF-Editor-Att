@@ -94,6 +94,7 @@ namespace GRF.Core {
 		public bool EncryptFileTable { get; private set; }
 		public bool DecryptFileTable { get; internal set; }
 		internal Container Container { get; private set; }
+		internal void Rebind(Container container) { Container = container; }
 		public ThorSettings ThorSettings = new ThorSettings();
 
 		public string Key { get; set; }

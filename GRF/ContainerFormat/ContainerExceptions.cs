@@ -1,5 +1,6 @@
 ﻿using System;
 using GRF.Core;
+using GRF.Core.SafeSave;
 
 namespace GRF.ContainerFormat {
 	public static class GrfExceptions {
@@ -84,13 +85,14 @@ namespace GRF.ContainerFormat {
 		public static readonly FormattedExceptionMessage __SprRleBufferOverflowException = "Buffer overflow while executing the Rle compression or decompressing.";
 		public static readonly FormattedExceptionMessage __UnsupportedEncryptionOperation = "The encryption operation is incompatible with the version used on this GRF.";
 		public static readonly FormattedExceptionMessage __UnsupportedEncryptionVersion = "GRF encryption can only be used for THOR, GRF and GPF files which use the 0x200 or 0x300 format.";
+		public static readonly FormattedExceptionMessage __SafeSaveFormatReadOnly = "Writing is blocked for this GRF format: {0}.";
 
 		internal static void IfNullThrow(object value, string name) {
 			if (value == null)
 				throw __ArgumentNullValue.Create(name);
 		}
 
-		internal static void IfSavingThrow<T>(ContainerAbstract<T> container) where T : ContainerEntry {
+		internal static void IfSavingThrow<T>(ContainerAbstract<T> container, bool allowOwnerRead = false) where T : ContainerEntry {
 			try {
 				var t = container.Commands;
 			}
@@ -98,7 +100,9 @@ namespace GRF.ContainerFormat {
 				throw __ContainerClosed.Create();
 			}
 
-			if (container.IsBusy || container.Commands.IsLocked)
+			if ((container.IsBusy && (!(container is Container concrete) || !concrete.IsCurrentSaveThread ||
+				(!allowOwnerRead && !concrete.IsInternalMutationAuthorized))) ||
+				container.Commands.IsLocked)
 				throw __ContainerBusy.Create();
 		}
 
@@ -240,5 +244,17 @@ namespace GRF.ContainerFormat {
 		public static bool operator !=(GrfException exp1, FormattedExceptionMessage exp2) => !(exp1 == exp2);
 		public static bool operator !=(GrfException exp1, GrfException exp2) => !(exp1 == exp2);
 		public static bool operator !=(FormattedExceptionMessage exp1, GrfException exp2) => !(exp1 == exp2);
+	}
+
+	public sealed class SafeSaveFormatReadOnlyException : GrfException {
+		public SafeSaveFormatReadOnlyException(ContainerWriteClassification classification)
+			: base(GrfExceptions.__SafeSaveFormatReadOnly,
+				GrfExceptions.__SafeSaveFormatReadOnly.Display(classification == null ? "unknown-format" : classification.ReasonCode)) {
+			Classification = classification;
+			ReasonCode = classification == null ? "unknown-format" : classification.ReasonCode;
+		}
+
+		public ContainerWriteClassification Classification { get; }
+		public string ReasonCode { get; }
 	}
 }

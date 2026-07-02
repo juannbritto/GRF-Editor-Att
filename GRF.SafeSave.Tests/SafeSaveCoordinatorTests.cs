@@ -89,6 +89,59 @@ namespace GRF.SafeSave.Tests {
 		}
 
 		[TestMethod]
+		public void Destination_preflight_runs_under_transaction_before_temporary_writer() {
+			var fileSystem = ExistingDestinationFileSystem();
+			var coordinator = new SafeSaveCoordinator(fileSystem);
+			var request = Request(fileSystem);
+			bool writerCalled = false;
+			bool nestedWriterCalled = false;
+			request.WriteTemporary = path => writerCalled = true;
+			request.ValidateDestination = (destination, destinationExists) => {
+				Assert.IsTrue(destinationExists);
+				var nested = Request(fileSystem);
+				nested.WriteTemporary = path => nestedWriterCalled = true;
+				SafeSaveOutcome nestedOutcome = coordinator.Execute(nested);
+				Assert.IsFalse(nestedOutcome.Success);
+				Assert.IsTrue(nestedOutcome.Report.Items.Any(item => item.Code == "transaction.reentrant"));
+				throw new InvalidOperationException("blocked destination");
+			};
+
+			SafeSaveOutcome outcome = coordinator.Execute(request);
+
+			Assert.IsFalse(outcome.Success);
+			Assert.IsFalse(writerCalled);
+			Assert.IsFalse(nestedWriterCalled);
+			Assert.AreEqual(0, fileSystem.ReplaceCount);
+			Assert.AreEqual(0, fileSystem.DeleteTemporaryCount);
+		}
+
+		[TestMethod]
+		public void Destination_is_revalidated_after_temporary_validation_immediately_before_promotion() {
+			var fileSystem = ExistingDestinationFileSystem();
+			var request = Request(fileSystem);
+			bool temporaryValidated = false;
+			bool promoteValidationCalled = false;
+			request.ValidateTemporary = path => {
+				temporaryValidated = true;
+				return new SafeSaveValidationReport();
+			};
+			request.ValidateDestinationBeforePromote = (destination, destinationExists) => {
+				Assert.IsTrue(temporaryValidated);
+				Assert.IsTrue(destinationExists);
+				promoteValidationCalled = true;
+				throw new InvalidOperationException("destination changed");
+			};
+
+			SafeSaveOutcome outcome = new SafeSaveCoordinator(fileSystem).Execute(request);
+
+			Assert.IsFalse(outcome.Success);
+			Assert.IsTrue(promoteValidationCalled);
+			Assert.AreEqual(0, fileSystem.ReplaceCount);
+			Assert.AreEqual(0, fileSystem.MoveCount);
+			Assert.IsNull(outcome.BackupPath);
+		}
+
+		[TestMethod]
 		public void New_destination_uses_move_not_replace() {
 			var fileSystem = new RecordingFileSystem();
 
@@ -740,6 +793,57 @@ namespace GRF.SafeSave.Tests {
 				item.Code == "backup.previous-retained" && item.Path == retained));
 		}
 
+		[TestMethod]
+		public void Concurrent_destination_swap_is_rolled_back_and_validated_output_is_retained() {
+			var fileSystem = ExistingDestinationFileSystem();
+			fileSystem.BackupMatchesCapturedStamp = false;
+			SafeSaveRequest request = Request(fileSystem);
+			request.CaptureDestinationStamp = path => "classic-A";
+			request.VerifyReplacedDestination = (path, stamp) => fileSystem.BackupMatchesCapturedStamp;
+
+			SafeSaveOutcome outcome = new SafeSaveCoordinator(fileSystem).Execute(request);
+
+			Assert.IsFalse(outcome.Success);
+			Assert.IsTrue(fileSystem.RollbackCalled);
+			Assert.IsTrue(fileSystem.Files.Contains(fileSystem.RecoveryPath));
+			Assert.IsTrue(outcome.Report.Items.Any(item => item.Code == "destination.concurrent-change" &&
+				item.Path == fileSystem.RecoveryPath));
+		}
+
+		[TestMethod]
+		public void Unchanged_destination_completes_guarded_replace_with_and_without_user_backup() {
+			foreach (bool createBackup in new[] { false, true }) {
+				var fileSystem = ExistingDestinationFileSystem();
+				SafeSaveRequest request = Request(fileSystem);
+				request.Options.CreateBackup = createBackup;
+				request.CaptureDestinationStamp = path => "classic-A";
+				request.VerifyReplacedDestination = (path, stamp) => true;
+
+				SafeSaveOutcome outcome = new SafeSaveCoordinator(fileSystem).Execute(request);
+
+				Assert.IsTrue(outcome.Success, outcome.Report.ToString());
+				Assert.IsTrue(fileSystem.CompleteGuardedReplaceCalled);
+				Assert.AreEqual(createBackup, fileSystem.LastGuardWasUserBackup);
+			}
+		}
+
+		[TestMethod]
+		public void Concurrent_change_rollback_failure_preserves_recovery_artifacts() {
+			var fileSystem = ExistingDestinationFileSystem();
+			fileSystem.BackupMatchesCapturedStamp = false;
+			fileSystem.ThrowOnRollback = true;
+			SafeSaveRequest request = Request(fileSystem);
+			request.CaptureDestinationStamp = path => "classic-A";
+			request.VerifyReplacedDestination = (path, stamp) => false;
+
+			SafeSaveOutcome outcome = new SafeSaveCoordinator(fileSystem).Execute(request);
+
+			Assert.IsFalse(outcome.Success);
+			Assert.IsTrue(outcome.Report.Items.Any(item => item.Code == "destination.concurrent-recovery-failed"));
+			Assert.IsTrue(fileSystem.Files.Contains(fileSystem.LastOperationBackupPath));
+			Assert.IsTrue(fileSystem.Files.Contains(Path.GetFullPath("archive.grf")));
+		}
+
 		private static void UpdateMaximum(ref int maximum, int value) {
 			int observed;
 			do {
@@ -787,6 +891,13 @@ namespace GRF.SafeSave.Tests {
 			public string ResidualPreviousBackupPath;
 			public string RetainedPreviousBackupPathOnFailure;
 			public bool BackupUnavailableOnFailure;
+			public bool BackupMatchesCapturedStamp = true;
+			public bool RollbackCalled;
+			public bool ThrowOnRollback;
+			public bool CompleteGuardedReplaceCalled;
+			public bool LastGuardWasUserBackup;
+			public string LastOperationBackupPath;
+			public string RecoveryPath;
 
 			public bool Exists(string path) => Files.Contains(path);
 			public long Length(string path) => LengthValue;
@@ -847,6 +958,30 @@ namespace GRF.SafeSave.Tests {
 				if (backupPath != null) Files.Add(backupPath);
 				return ResidualPreviousBackupPath;
 			}
+
+			public SafeSaveReplaceResult ReplaceExistingGuarded(string temporaryPath, string destinationPath,
+				string operationBackupPath, bool userBackupRequested) {
+				LastGuardWasUserBackup = userBackupRequested;
+				LastOperationBackupPath = operationBackupPath;
+				string retainedPrevious = ReplaceExisting(temporaryPath, destinationPath, operationBackupPath);
+				return new SafeSaveReplaceResult(operationBackupPath, retainedPrevious, userBackupRequested);
+			}
+
+			public void CompleteGuardedReplace(SafeSaveReplaceResult replaceResult) {
+				CompleteGuardedReplaceCalled = true;
+				if (!replaceResult.UserBackupRequested) Files.Remove(replaceResult.OperationBackupPath);
+			}
+
+			public string RollbackConcurrentReplacement(string destinationPath, SafeSaveReplaceResult replaceResult) {
+				RollbackCalled = true;
+				RecoveryPath = destinationPath + ".concurrent-recovery-safe-save-test";
+				if (ThrowOnRollback) throw new SafeSaveConcurrentRecoveryException(
+					"forced rollback failure", RecoveryPath, replaceResult.OperationBackupPath, new IOException("forced"));
+				Files.Add(RecoveryPath);
+				Files.Remove(replaceResult.OperationBackupPath);
+				Files.Add(destinationPath);
+				return RecoveryPath;
+			}
 		}
 
 		private sealed class MutableIdentityResolver : ISafeSavePathIdentityResolver {
@@ -884,6 +1019,29 @@ namespace GRF.SafeSave.Tests {
 		[TestCleanup]
 		public void TearDown() {
 			if (Directory.Exists(_temporaryDirectory)) Directory.Delete(_temporaryDirectory, true);
+		}
+
+		[TestMethod]
+		public void Destination_stamp_equality_requires_matching_file_identity_when_available() {
+			byte[] header = new byte[46];
+			var first = new SafeSaveDestinationStamp(12, 34, header, true, 7, 8, 9);
+			var same = new SafeSaveDestinationStamp(12, 34, (byte[])header.Clone(), true, 7, 8, 9);
+			var differentFile = new SafeSaveDestinationStamp(12, 34, (byte[])header.Clone(), true, 7, 8, 10);
+
+			Assert.IsTrue(first.Matches(same));
+			Assert.IsFalse(first.Matches(differentFile));
+		}
+
+		[TestMethod]
+		public void Destination_stamp_without_identity_is_conservative_but_matches_identical_observations() {
+			byte[] header = new byte[46];
+			header[3] = 5;
+			var first = new SafeSaveDestinationStamp(12, 34, header, false, 0, 0, 0);
+			var same = new SafeSaveDestinationStamp(12, 34, (byte[])header.Clone(), false, 0, 0, 0);
+			var changed = new SafeSaveDestinationStamp(12, 35, (byte[])header.Clone(), false, 0, 0, 0);
+
+			Assert.IsTrue(first.Matches(same));
+			Assert.IsFalse(first.Matches(changed));
 		}
 
 		[TestMethod]

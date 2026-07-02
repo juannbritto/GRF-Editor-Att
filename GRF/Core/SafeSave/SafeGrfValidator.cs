@@ -24,19 +24,25 @@ namespace GRF.Core.SafeSave {
 					long tableStart = holder.Header.FileTableOffset > long.MaxValue - GrfHeader.DataByteSize
 						? long.MaxValue
 						: holder.Header.FileTableOffset + GrfHeader.DataByteSize;
-					HashSet<FileEntry> invalidEntries = ValidateLayout(holder.FileTable, tableStart, fileLength, report);
+					List<FileEntry> validationEntries = SafeSaveManifest.EntriesIncludingEncryptionMetadata(holder.FileTable).ToList();
+					HashSet<FileEntry> invalidEntries = ValidateLayout(validationEntries, tableStart, fileLength, report);
 					AddDuplicatePathErrors(holder.FileTable.DuplicatePaths, report);
 
-					foreach (FileEntry entry in holder.FileTable) {
+					foreach (FileEntry entry in validationEntries) {
 						if (invalidEntries.Contains(entry)) {
 							continue;
 						}
+						if (expected != null) continue;
 
 						try {
+							SafeSaveManifest.EnsureBounded(entry.RelativePath, entry.SizeDecompressed);
 							byte[] data = entry.GetDecompressedData();
 							if (data.LongLength != entry.SizeDecompressed) {
 								report.Add(SafeSavePhase.Validate, SafeSaveSeverity.Error, "entry.size", entry.RelativePath, $"Metadata declares {entry.SizeDecompressed} bytes but decompression produced {data.LongLength} bytes.");
 							}
+						}
+						catch (SafeSaveEntryTooLargeException exception) {
+							report.Add(SafeSavePhase.Validate, SafeSaveSeverity.Error, "manifest.entry-too-large", entry.RelativePath, exception.Message);
 						}
 						catch (Exception exception) {
 							report.Add(SafeSavePhase.Validate, SafeSaveSeverity.Error, "validation.exception", entry.RelativePath, exception.Message);

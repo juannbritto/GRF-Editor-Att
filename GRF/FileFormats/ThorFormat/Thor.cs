@@ -186,6 +186,8 @@ namespace GRF.FileFormats.ThorFormat {
 			var thorSettings = grf.InternalHeader.ThorSettings;
 			bool repack = thorSettings.Repack;
 			ICompression oldCompression = Compression.CompressionAlgorithm;
+			string originalPath = grf.FileName;
+			string disposableRepackPath = null;
 
 			try {
 				thor.Header.UseGrfMerging = thorSettings.UseGrfMerging;
@@ -193,7 +195,7 @@ namespace GRF.FileFormats.ThorFormat {
 				_validatePatchingMode(grf, thor, repack);
 				
 				if (repack)
-					_repackGrfData(grf, result);
+					disposableRepackPath = _repackGrfData(grf, result);
 
 				using (ByteWriterStream stream = new ByteWriterStream(new FileStream(fileName, FileMode.Create, FileAccess.Write))) {
 					thor.Header.TargetGrf = thorSettings.TargetGrf;
@@ -209,10 +211,10 @@ namespace GRF.FileFormats.ThorFormat {
 					}
 				}
 
-				// Prevents being warned about changes to the GRF; the file will be reloaded
-				grf.Commands.ClearCommands();
 			}
 			finally {
+				if (disposableRepackPath != null)
+					grf.ReleaseDisposableRepackSource(disposableRepackPath, originalPath);
 				Compression.CompressionAlgorithm = oldCompression;
 			}
 
@@ -227,12 +229,9 @@ namespace GRF.FileFormats.ThorFormat {
 			int oldCommandIndex = grf.Commands.CommandIndex;
 
 			try {
-				grf.IsBusy = false;
-
 				if (grf.Table.ContainsFile(RgzFormat.Rgz.Root + GrfStrings.GrfIntegrityFile))
-					grf.Commands.RemoveFile(RgzFormat.Rgz.Root + GrfStrings.GrfIntegrityFile);
-
-				grf.IsBusy = true;
+					using (grf.AuthorizeInternalMutation())
+						grf.Commands.RemoveFile(RgzFormat.Rgz.Root + GrfStrings.GrfIntegrityFile);
 
 				for (int i = 0; i < grf.Table.Entries.Count; i++) {
 					AProgress.IsCancelling(grf);
@@ -409,15 +408,13 @@ namespace GRF.FileFormats.ThorFormat {
 			stream.WriteAnsi("SEALED!");
 		}
 
-		private static void _repackGrfData(Container grf, ContainerSaveResult result) {
+		private static string _repackGrfData(Container grf, ContainerSaveResult result) {
+			grf.LimitProgress(true);
 			try {
-				grf.IsBusy = false;
-				grf.LimitProgress(true);
-				grf.Save(null, null, SavingMode.RepackSource, SyncMode.Synchronous);
+				return grf.PrepareDisposableRepackSource(result);
 			}
 			finally {
 				grf.LimitProgress(false);
-				grf.IsBusy = true;
 			}
 		}
 

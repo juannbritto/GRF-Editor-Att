@@ -276,7 +276,7 @@ namespace GRF.Core {
 			// Fix : 2015-06-27
 			// The container must NOT be saving while accessing decompressed data
 			if (Header.Container != null && !BypassSaveCheck)
-				GrfExceptions.IfSavingThrow(Header.Container);
+				GrfExceptions.IfSavingThrow(Header.Container, allowOwnerRead: true);
 
 			if (BypassSaveCheck)
 				BypassSaveCheck = false;
