@@ -4,3 +4,4 @@ artifacts/grf-safe-fixtures/
 **/obj/
 .dotnet-home/
 .packages/
+.superpowers/
