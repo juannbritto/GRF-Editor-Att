@@ -333,7 +333,7 @@ namespace GRFEditor.ApplicationConfiguration {
 
 		public static string PublicVersion => "1.9.1.0";
 		public static string Author => "Tokeiburu";
-		public static string ProgramName => "GRF Editor";
+		public static string ProgramName => "GRF Editor Safe";
 
 		public static string RealVersion {
 			get { return Assembly.GetEntryAssembly().GetName().Version.ToString(); }

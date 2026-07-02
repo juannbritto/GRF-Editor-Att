@@ -57,6 +57,10 @@ instalação real, faça backup e valide a cópia no cliente/servidor desejado. 
 Event Horizon, formatos desconhecidos e variantes sem suporte permanecem somente
 para leitura por segurança.
 
+A distribuição lado a lado usa o nome **GRF Editor Safe**, versão `1.6.0.0`. Ela
+possui executável, pasta de configuração, atalhos e desinstalador próprios. O
+instalador não assume associações de arquivos do GRF Editor existente.
+
 ## GRF library (documentação original)
 
 An editor for the GRF/GPF/Thor file formats from Ragnarok Online.
