@@ -5,3 +5,4 @@ artifacts/grf-safe-fixtures/
 .dotnet-home/
 .packages/
 .superpowers/
+.worktrees/
