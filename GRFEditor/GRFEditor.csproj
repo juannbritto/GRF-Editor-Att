@@ -245,6 +245,9 @@
     <Compile Include="WPF\SubtractDialog.xaml.cs">
       <DependentUpon>SubtractDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="WPF\SafeSaveReportDialog.xaml.cs">
+      <DependentUpon>SafeSaveReportDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="WPF\ESearchResult.cs" />
     <Compile Include="WPF\PreviewTabs\PreviewSprites.xaml.cs">
       <DependentUpon>PreviewSprites.xaml</DependentUpon>
@@ -483,6 +486,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="WPF\SubtractDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="WPF\SafeSaveReportDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

@@ -35,6 +35,16 @@ namespace GRFEditor.ApplicationConfiguration {
 			set => _configAsker = value;
 		}
 
+		public static bool SafeSaveCreateBackup {
+			get => Boolean.Parse(ConfigAsker["[Safe save - Create backup]", true.ToString()]);
+			set => ConfigAsker["[Safe save - Create backup]"] = value.ToString();
+		}
+
+		public static bool SafeSaveShowInformation {
+			get => Boolean.Parse(ConfigAsker["[Safe save - Show information]", true.ToString()]);
+			set => ConfigAsker["[Safe save - Show information]"] = value.ToString();
+		}
+
 		public static Brush UIPanelPreviewBackground {
 			get => (Brush)XamlReader.Parse(ConfigAsker["[Style - Panel preview background]", XamlWriter.Save(new SolidColorBrush(Colors.Transparent)).Replace(Environment.NewLine, "")]);
 			set => ConfigAsker["[Style - Panel preview background]"] = XamlWriter.Save(value).Replace(Environment.NewLine, "");

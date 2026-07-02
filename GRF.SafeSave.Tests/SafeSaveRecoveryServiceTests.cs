@@ -36,6 +36,27 @@ namespace GRF.SafeSave.Tests {
 		}
 
 		[TestMethod]
+		public void DeleteOwnedTemporary_removes_only_an_exact_discovered_path() {
+			string destination = Path.Combine(_temporaryDirectory, "delete.grf");
+			string owned = destination + ".safe-save-0123456789abcdef0123456789abcdef.tmp";
+			string similar = destination + ".safe-save-0123456789abcdef0123456789abcdef.tmpx";
+			File.WriteAllBytes(owned, new byte[] { 1 });
+			File.WriteAllBytes(similar, new byte[] { 2 });
+			var service = new SafeSaveRecoveryService();
+
+			service.DeleteOwnedTemporary(destination, owned);
+
+			Assert.IsFalse(File.Exists(owned));
+			try {
+				service.DeleteOwnedTemporary(destination, similar);
+				Assert.Fail("A similar but non-owned path must be rejected.");
+			}
+			catch (InvalidOperationException) {
+			}
+			Assert.IsTrue(File.Exists(similar));
+		}
+
+		[TestMethod]
 		public void Invalid_backup_is_rejected_without_changing_destination() {
 			string destination = CreateGrf("current.grf", "data\\current.txt", new byte[] { 1 });
 			string backup = Path.Combine(_temporaryDirectory, "current.grf.bak");

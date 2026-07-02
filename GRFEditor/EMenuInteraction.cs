@@ -13,6 +13,7 @@ using ErrorManager;
 using GRF;
 using GRF.ContainerFormat;
 using GRF.Core;
+using GRF.Core.SafeSave;
 using GRF.FileFormats;
 using GRF.FileFormats.ActFormat;
 using GRF.Image;
@@ -65,6 +66,28 @@ namespace GRFEditor {
 		private void _menuItemRepack_Click(object sender, RoutedEventArgs e) => _save(GrfEditorSaveMode.Repack);
 		private void _menuItemTableEncrypt_Click(object sender, RoutedEventArgs e) => _save(GrfEditorSaveMode.TableEncrypt);
 		private void _menuItemSaveAs_Click(object sender, RoutedEventArgs e) => _save(GrfEditorSaveMode.SaveAs);
+		private void _menuItemLastSafeSaveReport_Click(object sender, RoutedEventArgs e) {
+			if (_lastSafeSaveReport == null) return;
+			new SafeSaveReportDialog(_lastSafeSaveReport) { Owner = this }.ShowDialog();
+		}
+
+		private void _menuItemRestoreBackup_Click(object sender, RoutedEventArgs e) {
+			try {
+				string backup = _grfHolder.FileName + ".bak";
+				if (!File.Exists(backup)) {
+					ErrorHandler.HandleException("The standard .bak file was not found.");
+					return;
+				}
+				_lastSafeSaveReport = _grfHolder.RestoreBackup();
+				_menuItemLastSafeSaveReport.IsEnabled = true;
+				if (_lastSafeSaveReport.HasErrors) new SafeSaveReportDialog(_lastSafeSaveReport) { Owner = this }.ShowDialog();
+				_updateSafeSaveState();
+				_update(false);
+			}
+			catch (Exception err) {
+				ErrorHandler.HandleException(err);
+			}
+		}
 
 		public enum GrfEditorSaveMode {
 			QuickSave,
@@ -124,6 +147,12 @@ namespace GRFEditor {
 				}
 
 				ContainerSaveResult result = null;
+				_grfHolder.SafeSaveOptions = new SafeSaveOptions {
+					CreateBackup = Configuration.SafeSaveCreateBackup,
+					IncludeInformationItems = Configuration.SafeSaveShowInformation,
+					PhaseChanged = phase => Dispatcher.BeginInvoke(new System.Action(() =>
+						_safeSaveStateText.Text = SafeSaveUiText.Phase(phase, CultureInfo.CurrentUICulture.Name)))
+				};
 
 				_asyncOperation.ProgressBar.Progress = 0;
 				_asyncOperation.ProgressBar.Progress = -1;
@@ -149,8 +178,13 @@ namespace GRFEditor {
 					try {
 						if (result == null)
 							return;
+						_lastSafeSaveReport = result.SafeSaveReport;
+						_menuItemLastSafeSaveReport.IsEnabled = _lastSafeSaveReport != null;
+						_updateSafeSaveState();
 
 						if (!result.Success) {
+							if (_lastSafeSaveReport != null && _lastSafeSaveReport.HasErrors)
+								new SafeSaveReportDialog(_lastSafeSaveReport) { Owner = this }.ShowDialog();
 							if (result.Error != null)
 								ErrorHandler.HandleException(result.Error);
 							if (result.RequiresReload)

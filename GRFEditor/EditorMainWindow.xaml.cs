@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -10,6 +11,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using ErrorManager;
 using GRF.Core;
+using GRF.Core.SafeSave;
 using GRF.GrfSystem;
 using GRF.Threading;
 using GRFEditor.Core;
@@ -48,6 +50,7 @@ namespace GRFEditor {
 		private RenamingService _renamingService;
 		internal TreeViewPathManager _treeViewPathManager;
 		private EditorPosition _editorPosition = new EditorPosition();
+		private SafeSaveValidationReport _lastSafeSaveReport;
 		public static EditorMainWindow Instance;
 
 		public EditorMainWindow() {
@@ -197,6 +200,8 @@ namespace GRFEditor {
 				this.Dispatch(delegate {
 					_tmbUndo.LinkUndo(_grfHolder.Commands, Undo);
 					_tmbRedo.LinkRedo(_grfHolder.Commands, Redo);
+					_updateSafeSaveState();
+					_showOwnedSafeSaveTemporaries();
 				});
 			};
 
@@ -206,6 +211,32 @@ namespace GRFEditor {
 			};
 
 			_editorPosition.Load(this);
+		}
+
+		private void _updateSafeSaveState() {
+			if (!_grfHolder.IsOpened) return;
+			SafeSaveUiState state = SafeSaveUiState.From(_grfHolder.WriteClassification, CultureInfo.CurrentUICulture.Name);
+			_safeSaveStateText.Text = state.Label;
+			_safeSaveStateText.ToolTip = state.Explanation;
+			_menuItemSave.IsEnabled = state.CanExecuteWrite;
+			_menuItemSaveAs.IsEnabled = state.CanExecuteWrite;
+			_menuItemDefragment.IsEnabled = state.CanExecuteWrite;
+			_menuItemCompact.IsEnabled = state.CanExecuteWrite;
+			_menuItemRepack.IsEnabled = state.CanExecuteWrite;
+			_menuItemEncryptTable.IsEnabled = state.CanExecuteWrite;
+			_menuItemMerge.IsEnabled = state.CanExecuteWrite;
+			_menuItemSoustract.IsEnabled = state.CanExecuteWrite;
+			_items.AllowDrop = state.CanExecuteWrite;
+			_treeView.AllowDrop = state.CanExecuteWrite;
+			_menuItemRestoreBackup.IsEnabled = state.CanExecuteWrite && File.Exists(_grfHolder.FileName + ".bak");
+		}
+
+		private void _showOwnedSafeSaveTemporaries() {
+			if (!_grfHolder.IsOpened || !File.Exists(_grfHolder.FileName)) return;
+			List<string> temporaries = new SafeSaveRecoveryService().FindOwnedTemporaries(_grfHolder.FileName).ToList();
+			if (temporaries.Count == 0) return;
+			var dialog = new SafeSaveReportDialog(_grfHolder.FileName, temporaries) { Owner = this };
+			dialog.ShowDialog();
 		}
 
 		private void _loadServices() {

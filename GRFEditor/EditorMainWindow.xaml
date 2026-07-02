@@ -38,8 +38,10 @@
                 <Separator />
                 <MenuItem Name="_menuItemCloseGrf" TokeiLibrary:WpfProperties.ImagePath="empty.png" Header="Close Grf" Click="_menuItemCloseGrf_Click" />
                 <Separator />
-                <MenuItem Name="_menuItemSave" TokeiLibrary:WpfProperties.ImagePath="save.png" Header="Save" InputGestureText="Ctrl-S" Click="_menuItemSave_Click" />
-                <MenuItem Name="_menuItemSaveAs" TokeiLibrary:WpfProperties.ImagePath="empty.png" Header="Save as..." Click="_menuItemSaveAs_Click" />
+				<MenuItem Name="_menuItemSave" TokeiLibrary:WpfProperties.ImagePath="save.png" Header="Save safely" InputGestureText="Ctrl-S" Click="_menuItemSave_Click" />
+				<MenuItem Name="_menuItemSaveAs" TokeiLibrary:WpfProperties.ImagePath="empty.png" Header="Save as..." Click="_menuItemSaveAs_Click" />
+				<MenuItem Name="_menuItemRestoreBackup" TokeiLibrary:WpfProperties.ImagePath="refresh.png" Header="Restore validated .bak" Click="_menuItemRestoreBackup_Click" />
+				<MenuItem Name="_menuItemLastSafeSaveReport" TokeiLibrary:WpfProperties.ImagePath="warning16.png" Header="Last safe-save report" IsEnabled="False" Click="_menuItemLastSafeSaveReport_Click" />
                 <MenuItem Header="Save advanced" TokeiLibrary:WpfProperties.ImagePath="empty.png">
                     <MenuItem Name="_menuItemDefragment" TokeiLibrary:WpfProperties.ImagePath="defrag.png" Header="Defragment (quick)" Click="_menuItemDefragment_Click" InputGestureText="Ctrl-Shift-S" />
                     <MenuItem Name="_menuItemCompact" TokeiLibrary:WpfProperties.ImagePath="redirect.png" Header="Compact (redirect indexes)" Click="_menuItemCompact_Click" InputGestureText="Ctrl-Alt-S" />
@@ -114,9 +116,12 @@
 			<Styles:FancyButton x:Name="_buttonFancyBackward" Height="24" Width="24" TokeiLibrary:WpfProperties.ImagePath="backward.png" Click="_buttonPositionUndo_Click" IsButtonEnabled="False" />
 			<Styles:FancyButton x:Name="_buttonFancyForward" Height="24" Width="24" TokeiLibrary:WpfProperties.ImagePath="forward.png" Click="_buttonPositionRedo_Click" IsButtonEnabled="False" />
         </DockPanel>
-        <DockPanel Grid.Row="0" HorizontalAlignment="Right" Margin="0 0 2 0">
+		<DockPanel Grid.Row="0" HorizontalAlignment="Right" Margin="0 0 2 0">
             <Styles:TkProgressBar x:Name="_progressBarComponent" Width="300" />
-        </DockPanel>
+		</DockPanel>
+		<Border Grid.Row="1" Padding="6 3" BorderThickness="0 1 0 0" BorderBrush="{x:Static TokeiLibrary:Configuration.UIGridBackground}" Background="{DynamicResource UIDialogBackground}">
+			<TextBlock x:Name="_safeSaveStateText" Text="Safe save: waiting for a container" TextTrimming="CharacterEllipsis" ToolTipService.ShowDuration="30000" />
+		</Border>
         <Line Stretch="Fill" Grid.Row="2" StrokeThickness="2" Stroke="{x:Static TokeiLibrary:Configuration.UIGridBackground}" X2="1" StrokeStartLineCap="Square" StrokeEndLineCap="Square" />
         <Grid Grid.Row="3" Name="_primaryGrid">
             <Grid.ColumnDefinitions>

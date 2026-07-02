@@ -30,6 +30,14 @@ namespace GRF.Core.SafeSave {
 				.ToArray();
 		}
 
+		public void DeleteOwnedTemporary(string destination, string temporaryPath) {
+			string fullTemporary = Path.GetFullPath(temporaryPath);
+			if (!FindOwnedTemporaries(destination).Any(path => string.Equals(Path.GetFullPath(path), fullTemporary, StringComparison.OrdinalIgnoreCase))) {
+				throw new InvalidOperationException("The selected file is not an owned safe-save temporary.");
+			}
+			File.Delete(fullTemporary);
+		}
+
 		public SafeSaveValidationReport RestoreBackup(string destination, string backup) {
 			var report = new SafeSaveValidationReport();
 			string fullDestination = Path.GetFullPath(destination);

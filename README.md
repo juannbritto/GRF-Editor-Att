@@ -28,6 +28,12 @@ preservando o crédito e o histórico do trabalho original.
   mantido até a confirmação estrutural da GRF recuperada.
 - Descoberta restrita de temporários pertencentes ao salvamento seguro, evitando
   confundir ou remover arquivos semelhantes criados pelo usuário.
+- Estado de compatibilidade visível na interface, fases de salvamento apresentadas
+  durante a operação e comandos para consultar o último relatório de validação.
+- Preferências para criação de `.bak` e nível de detalhes do relatório; a validação
+  estrutural permanece obrigatória independentemente dessas preferências.
+- Recuperação pela interface limitada ao backup padrão e a temporários reconhecidos,
+  sem promoção automática de arquivos abandonados.
 - Proteção contra alteração concorrente: identidade do arquivo, tamanho, data,
   cabeçalho e política de formato são conferidos novamente no momento da troca.
 - Validação estrutural de GRF/GPF e dos contêineres auxiliares usados por THOR.

@@ -103,6 +103,8 @@
 							<WPF:QuickColorSelector Height="20" Margin="3" x:Name="_qcsBackground" Grid.Row="6" Grid.Column="1" ColorBrush="{x:Static ApplicationConfiguration:GrfEditorConfiguration.UIPanelPreviewBackground}" />
 						</Grid>
 						<StackPanel>
+							<CheckBox IsChecked="{Binding Path=(ApplicationConfiguration:GrfEditorConfiguration.SafeSaveCreateBackup), Mode=TwoWay}" Content="Create .bak before replacing a GRF" ToolTip="Keeps the previous validated GRF as a backup before replacement." />
+							<CheckBox IsChecked="{Binding Path=(ApplicationConfiguration:GrfEditorConfiguration.SafeSaveShowInformation), Mode=TwoWay}" Content="Show detailed validation information" ToolTip="Controls informational report entries. Structural validation always remains enabled." />
 							<CheckBox IsChecked="{Binding Path=(ApplicationConfiguration:GrfEditorConfiguration.CpuPerformanceManagement), Mode=TwoWay}" Content="CPU performance management" ToolTip="This option monitors your CPU usage and it'll be used to dynamically change the number of threads doing work. The main purpose of this feature is to avoid situations where the CPU could reach 100% usage and hence lagging the entire system." />
 							<CheckBox IsChecked="{Binding Path=(ApplicationConfiguration:GrfEditorConfiguration.AlwaysOpenAfterExtraction), Mode=TwoWay}" Content="Always open folder after extraction" ToolTip="Prevents services from showing a file or folder in Windows Explorer after an extraction." />
 							<CheckBox IsChecked="{Binding Path=(ApplicationConfiguration:GrfEditorConfiguration.AlwaysReopenLatestGrf), Mode=TwoWay}" Content="Always reopen latest opened GRF" ToolTip="Always reopen the most recently opened GRF when starting the application." />
