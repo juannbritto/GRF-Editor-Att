@@ -150,8 +150,12 @@ namespace GRFEditor {
 				_grfHolder.SafeSaveOptions = new SafeSaveOptions {
 					CreateBackup = Configuration.SafeSaveCreateBackup,
 					IncludeInformationItems = Configuration.SafeSaveShowInformation,
-					PhaseChanged = phase => Dispatcher.BeginInvoke(new System.Action(() =>
-						_safeSaveStateText.Text = SafeSaveUiText.Phase(phase, CultureInfo.CurrentUICulture.Name)))
+					PhaseChanged = phase => Dispatcher.BeginInvoke(new System.Action(() => {
+						_safeSaveStateText.Text = SafeSaveUiText.Phase(phase, CultureInfo.CurrentUICulture.Name);
+						_safeSaveStateIcon.Text = "…";
+						_safeSaveStateBorder.BorderBrush = TryFindResource("GrfAccentBrush") as System.Windows.Media.Brush;
+						_safeSaveStateIcon.Foreground = _safeSaveStateBorder.BorderBrush;
+					}))
 				};
 
 				_asyncOperation.ProgressBar.Progress = 0;

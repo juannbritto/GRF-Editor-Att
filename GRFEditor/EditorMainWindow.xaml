@@ -6,7 +6,8 @@
         xmlns:WPF="clr-namespace:TokeiLibrary.WPF;assembly=TokeiLibrary"
         xmlns:ListView="clr-namespace:TokeiLibrary.WPF.Styles.ListView;assembly=TokeiLibrary"
         xmlns:WpfBugFix="clr-namespace:TokeiLibrary.WpfBugFix;assembly=TokeiLibrary"
-		Title="GRF Editor" Height="549" Width="730" Icon="Resources\internalapp.png" MinWidth="680" SnapsToDevicePixels="True" UseLayoutRounding="True">
+		Title="GRF Editor Safe" Height="680" Width="1040" Icon="Resources\internalapp.png" MinWidth="820" MinHeight="520" SnapsToDevicePixels="True" UseLayoutRounding="True"
+        Background="{StaticResource GrfCanvasBrush}" Foreground="{StaticResource GrfTextBrush}">
     <Window.Resources>
         <Style TargetType="ListViewItem">
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -14,12 +15,13 @@
     </Window.Resources>
     <Grid DragEnter="_menu_DragEnter" Drop="_menu_Drop">
         <Grid.RowDefinitions>
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition />
+            <RowDefinition Height="30" />
+            <RowDefinition Height="42" />
+            <RowDefinition Height="36" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="28" />
         </Grid.RowDefinitions>
-        <Menu Height="30" AllowDrop="True">
+        <Menu Grid.Row="0" Height="30" AllowDrop="True" Background="{StaticResource GrfSurfaceBrush}">
             <MenuItem Margin="0 0 0 0">
                 <MenuItem.Header>
                     <Label Content="File" Name="_miFile" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="-5 0 -5 0" />
@@ -108,21 +110,57 @@
                 </MenuItem>
             </MenuItem>
         </Menu>
-        <Image Margin="114,0,0,0" Source="Resources\find.png" Height="16" Width="16"  HorizontalAlignment="Left" />
-        <TextBox Name="_textBoxMainSearch"  Width="130" Margin="133,3,0,3" Height="24" TextChanged="_textBox_TextChanged" VerticalAlignment="Center" HorizontalAlignment="Left" VerticalContentAlignment="Center" />
-        <DockPanel Grid.Row="0" HorizontalAlignment="Left" Margin="265 0 0 0">
-            <WpfBugFix:ToggleMemoryButton x:Name="_tmbUndo" IsEnabled="false" PrimaryButtonImagePath="undo.png" DisplayFormat="Undo {0} action" />
-            <WpfBugFix:ToggleMemoryButton x:Name="_tmbRedo" IsEnabled="false" PrimaryButtonImagePath="redo.png" DisplayFormat="Redo {0} action" />
-			<Styles:FancyButton x:Name="_buttonFancyBackward" Height="24" Width="24" TokeiLibrary:WpfProperties.ImagePath="backward.png" Click="_buttonPositionUndo_Click" IsButtonEnabled="False" />
-			<Styles:FancyButton x:Name="_buttonFancyForward" Height="24" Width="24" TokeiLibrary:WpfProperties.ImagePath="forward.png" Click="_buttonPositionRedo_Click" IsButtonEnabled="False" />
-        </DockPanel>
-		<DockPanel Grid.Row="0" HorizontalAlignment="Right" Margin="0 0 2 0">
-            <Styles:TkProgressBar x:Name="_progressBarComponent" Width="300" />
-		</DockPanel>
-		<Border Grid.Row="1" Padding="6 3" BorderThickness="0 1 0 0" BorderBrush="{x:Static TokeiLibrary:Configuration.UIGridBackground}" Background="{DynamicResource UIDialogBackground}">
-			<TextBlock x:Name="_safeSaveStateText" Text="Safe save: waiting for a container" TextTrimming="CharacterEllipsis" ToolTipService.ShowDuration="30000" />
-		</Border>
-        <Line Stretch="Fill" Grid.Row="2" StrokeThickness="2" Stroke="{x:Static TokeiLibrary:Configuration.UIGridBackground}" X2="1" StrokeStartLineCap="Square" StrokeEndLineCap="Square" />
+        <Border Grid.Row="1" Background="{StaticResource GrfSurfaceBrush}" BorderBrush="{StaticResource GrfBorderBrush}" BorderThickness="0,1,0,1" Padding="8,5">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="230" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal">
+                    <Button x:Name="_buttonOpenToolbar" Content="Open" Style="{StaticResource GrfSecondaryButton}" MinWidth="74" Margin="0,0,6,0" Click="_menuItemOpenFrom_Click" ToolTip="Open a GRF or supported container (Ctrl+O)" />
+                    <Button x:Name="_buttonSaveToolbar" Content="Save safely" Style="{StaticResource GrfPrimaryButton}" MinWidth="104" Click="_menuItemSave_Click" ToolTip="Validate a copy before replacing the current GRF (Ctrl+S)" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0,0,0">
+                    <WpfBugFix:ToggleMemoryButton x:Name="_tmbUndo" IsEnabled="false" PrimaryButtonImagePath="undo.png" DisplayFormat="Undo {0} action" />
+                    <WpfBugFix:ToggleMemoryButton x:Name="_tmbRedo" IsEnabled="false" PrimaryButtonImagePath="redo.png" DisplayFormat="Redo {0} action" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="4,0,0,0">
+                    <Styles:FancyButton x:Name="_buttonFancyBackward" Height="28" Width="28" TokeiLibrary:WpfProperties.ImagePath="backward.png" Click="_buttonPositionUndo_Click" IsButtonEnabled="False" ToolTip="Navigate backward (Alt+Z)" />
+                    <Styles:FancyButton x:Name="_buttonFancyForward" Height="28" Width="28" TokeiLibrary:WpfProperties.ImagePath="forward.png" Click="_buttonPositionRedo_Click" IsButtonEnabled="False" ToolTip="Navigate forward (Alt+Y)" />
+                </StackPanel>
+                <Grid Grid.Column="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="24" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Image Source="Resources\find.png" Height="16" Width="16" VerticalAlignment="Center" />
+                    <TextBox Grid.Column="1" Name="_textBoxMainSearch" Height="28" TextChanged="_textBox_TextChanged" VerticalContentAlignment="Center" ToolTip="Search in the complete archive" />
+                </Grid>
+            </Grid>
+        </Border>
+        <Border Grid.Row="2" Background="{StaticResource GrfSurfaceAltBrush}" BorderBrush="{StaticResource GrfBorderBrush}" BorderThickness="0,0,0,1" Padding="8,4">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="260" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Archive" FontWeight="SemiBold" Foreground="{StaticResource GrfMutedTextBrush}" Margin="0,0,8,0" />
+                    <TextBlock x:Name="_archivePathText" Text="No container open" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                </StackPanel>
+                <Styles:TkProgressBar Grid.Column="1" x:Name="_progressBarComponent" Margin="10,0" />
+                <Border Grid.Column="2" x:Name="_safeSaveStateBorder" Style="{StaticResource GrfSafeStatusBorder}" MinWidth="210">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock x:Name="_safeSaveStateIcon" Text="•" FontWeight="Bold" Margin="0,0,6,0" />
+                        <TextBlock x:Name="_safeSaveStateText" Text="Safe save: waiting for a container" TextTrimming="CharacterEllipsis" ToolTipService.ShowDuration="30000" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
         <Grid Grid.Row="3" Name="_primaryGrid">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="468" />
@@ -156,24 +194,35 @@
                 <GridSplitter Name="_gridSplitterSearch" Visibility="Collapsed" MinHeight="0" Height="2" HorizontalAlignment="Stretch" Grid.Row="1" VerticalAlignment="Stretch" Background="{x:Static TokeiLibrary:Configuration.UIGridBackground}" />
 
                 <Grid x:Name="_gridTreeView" Grid.Row="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="30" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="198" />
                         <ColumnDefinition Width="2" />
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
+                    <Border Grid.Row="0" Grid.Column="0" Background="{StaticResource GrfSurfaceAltBrush}" BorderBrush="{StaticResource GrfBorderBrush}" BorderThickness="0,0,0,1" Padding="8,0">
+                        <TextBlock Text="Folders" Style="{StaticResource GrfPaneHeader}" />
+                    </Border>
                     <!-- TreeView and ListView -->
-                    <WPF:TkView Grid.Column="0" BorderThickness="0" Margin="0" Name="_treeView" Drop="_treeView_Drop" SelectedItemChanged="_treeView_SelectedItemChanged" KeyDown="_treeView_KeyDown" PreviewMouseRightButtonUp="_treeView_PreviewMouseRightButtonUp" PreviewMouseRightButtonDown="_treeView_PreviewMouseRightButtonDown" />
-                    <GridSplitter Width="2" Grid.Column="1" HorizontalAlignment="Left" Background="{x:Static TokeiLibrary:Configuration.UIGridBackground}" />
-                    <Grid Grid.Column="2" Background="{DynamicResource ListItemSearchBackground}">
+                    <WPF:TkView Grid.Row="1" Grid.Column="0" BorderThickness="0" Margin="0" Name="_treeView" Drop="_treeView_Drop" SelectedItemChanged="_treeView_SelectedItemChanged" KeyDown="_treeView_KeyDown" PreviewMouseRightButtonUp="_treeView_PreviewMouseRightButtonUp" PreviewMouseRightButtonDown="_treeView_PreviewMouseRightButtonDown" />
+                    <GridSplitter Grid.RowSpan="2" Width="2" Grid.Column="1" HorizontalAlignment="Left" Background="{StaticResource GrfBorderBrush}" />
+                    <Grid Grid.RowSpan="2" Grid.Column="2" Background="{DynamicResource ListItemSearchBackground}">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="auto" />
-                            <RowDefinition />
+                            <RowDefinition Height="30" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <DockPanel Grid.Row="0">
+                        <Border Grid.Row="0" Background="{StaticResource GrfSurfaceAltBrush}" BorderBrush="{StaticResource GrfBorderBrush}" BorderThickness="0,0,0,1" Padding="8,0">
+                            <TextBlock Text="Files" Style="{StaticResource GrfPaneHeader}" />
+                        </Border>
+                        <DockPanel Grid.Row="1">
                             <Image Margin="5,0,0,0" Source="Resources\filter.png" Height="16" Width="16" VerticalAlignment="Center" />
-                            <TextBox Name="_textBoxSearch" Height="22" Margin="3" TextChanged="_textBoxSearch_TextChanged" VerticalAlignment="Center" VerticalContentAlignment="Center" />
+                            <TextBox Name="_textBoxSearch" Height="28" Margin="3" TextChanged="_textBoxSearch_TextChanged" VerticalAlignment="Center" VerticalContentAlignment="Center" ToolTip="Filter the current folder" />
                         </DockPanel>
-                        <ListView TextSearch.TextPath="DisplayRelativePath" AllowDrop="True" Grid.Row="1" Name="_items" SelectionChanged="_items_SelectionChanged"  SelectionMode="Extended" DragEnter="_items_DragEnter" DragLeave="_items_DragLeave" Drop="_items_Drop"
+                        <ListView TextSearch.TextPath="DisplayRelativePath" AllowDrop="True" Grid.Row="2" Name="_items" SelectionChanged="_items_SelectionChanged"  SelectionMode="Extended" DragEnter="_items_DragEnter" DragLeave="_items_DragLeave" Drop="_items_Drop"
 		                    PreviewMouseLeftButtonDown="_items_PreviewMouseLeftButtonDown" BorderThickness="0" PreviewMouseRightButtonUp="_items_PreviewMouseRightButtonUp" KeyDown="_items_KeyDown" FocusVisualStyle="{x:Null}"
 		                    ListView:ListViewExtensions.IsGridSortable="True" VirtualizingStackPanel.IsVirtualizing="True" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         </ListView>
@@ -182,7 +231,14 @@
             </Grid>
             <GridSplitter Name="_gridSplitterPanels" Width="2" Grid.Column="1" HorizontalAlignment="Left" Background="{x:Static TokeiLibrary:Configuration.UIGridBackground}" />
             <Grid Grid.Column="2">
-                <Border Background="{DynamicResource TabControlBackground}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Border Grid.Row="0" Background="{StaticResource GrfSurfaceAltBrush}" BorderBrush="{StaticResource GrfBorderBrush}" BorderThickness="0,0,0,1" Padding="8,0">
+                    <TextBlock Text="Preview" Style="{StaticResource GrfPaneHeader}" />
+                </Border>
+                <Border Grid.Row="1" Background="{DynamicResource TabControlBackground}">
                     <Grid>
                         <TabControl Name="_tabControlPreview" Style="{DynamicResource TabControlStyled}" SnapsToDevicePixels="True">
                         </TabControl>
@@ -191,5 +247,11 @@
                 </Border>
             </Grid>
         </Grid>
+        <Border Grid.Row="4" Background="{StaticResource GrfSurfaceAltBrush}" BorderBrush="{StaticResource GrfBorderBrush}" BorderThickness="0,1,0,0" Padding="8,4">
+            <DockPanel>
+                <TextBlock x:Name="_fileCountText" Text="0 files" Foreground="{StaticResource GrfMutedTextBrush}" DockPanel.Dock="Right" />
+                <TextBlock Text="Ready" Foreground="{StaticResource GrfMutedTextBrush}" />
+            </DockPanel>
+        </Border>
     </Grid>
 </Window>

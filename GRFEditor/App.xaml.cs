@@ -88,6 +88,8 @@ namespace GRFEditor {
 				};
 			}
 
+			Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("pack://application:,,,/" + Assembly.GetEntryAssembly().GetName().Name.Replace(" ", "%20") + ";component/WPF/Styles/ClassicRefined.xaml", UriKind.RelativeOrAbsolute) });
+
 			base.OnStartup(e);
 		}
 

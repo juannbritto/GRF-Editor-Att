@@ -126,7 +126,20 @@ namespace GRFEditor.WPF {
 		private void _changeStyle(int themeIndex) {
 			try {
 				GrfEditorConfiguration.ThemeIndex = themeIndex;
-				Application.Current.Resources.MergedDictionaries.RemoveAt(Application.Current.Resources.MergedDictionaries.Count - 1);
+				var dictionaries = Application.Current.Resources.MergedDictionaries;
+				int baseThemeIndex = -1;
+
+				for (int i = 0; i < dictionaries.Count; i++) {
+					string source = dictionaries[i].Source == null ? "" : dictionaries[i].Source.OriginalString;
+					if (source.EndsWith("StyleLightBlue.xaml", StringComparison.OrdinalIgnoreCase) ||
+					    source.EndsWith("StyleDark.xaml", StringComparison.OrdinalIgnoreCase)) {
+						baseThemeIndex = i;
+						break;
+					}
+				}
+
+				if (baseThemeIndex >= 0)
+					dictionaries.RemoveAt(baseThemeIndex);
 
 				var path = "pack://application:,,,/" + Assembly.GetEntryAssembly().GetName().Name.Replace(" ", "%20") + ";component/WPF/Styles/";
 
@@ -137,7 +150,16 @@ namespace GRFEditor.WPF {
 					path += "StyleDark.xaml";
 				}
 
-				Application.Current.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri(path, UriKind.RelativeOrAbsolute) });
+				int refinedIndex = dictionaries.Count;
+				for (int i = 0; i < dictionaries.Count; i++) {
+					string source = dictionaries[i].Source == null ? "" : dictionaries[i].Source.OriginalString;
+					if (source.EndsWith("ClassicRefined.xaml", StringComparison.OrdinalIgnoreCase)) {
+						refinedIndex = i;
+						break;
+					}
+				}
+
+				dictionaries.Insert(refinedIndex, new ResourceDictionary { Source = new Uri(path, UriKind.RelativeOrAbsolute) });
 				ApplicationManager.OnThemeChanged();
 			}
 			catch (Exception err) {
