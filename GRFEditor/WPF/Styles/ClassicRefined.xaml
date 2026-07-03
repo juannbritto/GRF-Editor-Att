@@ -1,0 +1,119 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="GrfCanvasBrush" Color="#FFF3F5F7" />
+    <SolidColorBrush x:Key="GrfSurfaceBrush" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="GrfSurfaceAltBrush" Color="#FFF8F9FB" />
+    <SolidColorBrush x:Key="GrfBorderBrush" Color="#FFD6DBE1" />
+    <SolidColorBrush x:Key="GrfTextBrush" Color="#FF20262E" />
+    <SolidColorBrush x:Key="GrfMutedTextBrush" Color="#FF626D78" />
+    <SolidColorBrush x:Key="GrfAccentBrush" Color="#FF2868A9" />
+    <SolidColorBrush x:Key="GrfAccentHoverBrush" Color="#FF1F5790" />
+    <SolidColorBrush x:Key="GrfAccentPressedBrush" Color="#FF174675" />
+    <SolidColorBrush x:Key="GrfFocusBrush" Color="#FF68A6E3" />
+    <SolidColorBrush x:Key="GrfSuccessBrush" Color="#FF287A4B" />
+    <SolidColorBrush x:Key="GrfWarningBrush" Color="#FF9A6500" />
+    <SolidColorBrush x:Key="GrfDangerBrush" Color="#FFB43A3A" />
+    <SolidColorBrush x:Key="GrfDangerHoverBrush" Color="#FF962E2E" />
+
+    <Style x:Key="GrfKeyboardFocus" TargetType="Control">
+        <Setter Property="FocusVisualStyle">
+            <Setter.Value>
+                <Style>
+                    <Setter Property="Control.Template">
+                        <Setter.Value>
+                            <ControlTemplate>
+                                <Border BorderBrush="{StaticResource GrfFocusBrush}" BorderThickness="2"
+                                        CornerRadius="3" Margin="-3" />
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="GrfSecondaryButton" TargetType="Button" BasedOn="{StaticResource GrfKeyboardFocus}">
+        <Setter Property="MinHeight" Value="28" />
+        <Setter Property="Padding" Value="12,4" />
+        <Setter Property="Background" Value="{StaticResource GrfSurfaceBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource GrfTextBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource GrfBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Chrome" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="3" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Chrome" Property="Background" Value="{StaticResource GrfSurfaceAltBrush}" />
+                            <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource GrfAccentBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Chrome" Property="Background" Value="#FFE7EDF4" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.55" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="GrfPrimaryButton" TargetType="Button" BasedOn="{StaticResource GrfSecondaryButton}">
+        <Setter Property="Background" Value="{StaticResource GrfAccentBrush}" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="BorderBrush" Value="{StaticResource GrfAccentBrush}" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource GrfAccentHoverBrush}" />
+                <Setter Property="BorderBrush" Value="{StaticResource GrfAccentHoverBrush}" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value="{StaticResource GrfAccentPressedBrush}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="GrfDangerButton" TargetType="Button" BasedOn="{StaticResource GrfSecondaryButton}">
+        <Setter Property="Foreground" Value="{StaticResource GrfDangerBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource GrfDangerBrush}" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource GrfDangerBrush}" />
+                <Setter Property="Foreground" Value="White" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value="{StaticResource GrfDangerHoverBrush}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="GrfPaneHeader" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{StaticResource GrfTextBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style x:Key="GrfDialogFooter" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource GrfSurfaceAltBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource GrfBorderBrush}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+        <Setter Property="Padding" Value="16,10" />
+    </Style>
+
+    <Style x:Key="GrfSafeStatusBorder" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource GrfSurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource GrfBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Padding" Value="8,4" />
+    </Style>
+</ResourceDictionary>

@@ -6,6 +6,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="WPF\Styles\GRFEditorStyles.xaml" />
+                <ResourceDictionary Source="WPF\Styles\ClassicRefined.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
