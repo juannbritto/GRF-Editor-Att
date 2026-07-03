@@ -7,7 +7,7 @@
         xmlns:wpf="clr-namespace:GRFEditor.OpenGL.WPF"
         xmlns:map="clr-namespace:GRFEditor.Tools.Map"
         xmlns:TokeiLibrary="clr-namespace:TokeiLibrary;assembly=TokeiLibrary"
-        Width="1160" Height="610">
+        Width="1160" Height="610" Background="{StaticResource GrfCanvasBrush}" Foreground="{StaticResource GrfTextBrush}" UseLayoutRounding="True" SnapsToDevicePixels="True">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition />

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:Styles="clr-namespace:TokeiLibrary.WPF.Styles;assembly=TokeiLibrary"
         xmlns:TokeiLibrary="clr-namespace:TokeiLibrary;assembly=TokeiLibrary"
-        MinWidth="550" MaxWidth="550" Background="{StaticResource TabItemBackground}" Foreground="{StaticResource TextForeground}" SnapsToDevicePixels="True">
+        MinWidth="550" MaxWidth="550" Background="{StaticResource GrfCanvasBrush}" Foreground="{StaticResource GrfTextBrush}" SnapsToDevicePixels="True" UseLayoutRounding="True">
     <StackPanel>
         <StackPanel>
             <StackPanel>

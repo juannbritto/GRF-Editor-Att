@@ -139,6 +139,29 @@ namespace GRF.SafeSave.Tests {
 				StringAssert.Contains(text, "Name=\"" + name + "\"");
 		}
 
+		[TestMethod]
+		public void Specialist_tool_windows_share_refined_chrome_without_renderer_changes() {
+			string[] windows = {
+				Path.Combine("GRFEditor", "WPF", "EncryptorDialog.xaml"),
+				Path.Combine("GRFEditor", "WPF", "HashDialog.xaml"),
+				Path.Combine("GRFEditor", "WPF", "ImageConverter.xaml"),
+				Path.Combine("GRFEditor", "WPF", "MultiProgressWindow.xaml"),
+				Path.Combine("GRFEditor", "WPF", "PatcherDialog.xaml"),
+				Path.Combine("GRFEditor", "Tools", "GrfShrinker", "GrfShrinkerDialog.xaml"),
+				Path.Combine("GRFEditor", "Tools", "Map", "MapEditorWindow.xaml"),
+				Path.Combine("GRFEditor", "Tools", "SpriteEditor", "SpriteConverter.xaml"),
+				Path.Combine("GRFEditor", "OpenGL", "WPF", "OpenGLDebugDialog.xaml"),
+				Path.Combine("GRFEditor", "Tools", "MapExtractor", "MapExtractorDialog.xaml")
+			};
+
+			foreach (string relativePath in windows) {
+				string text = File.ReadAllText(Path.Combine(FindRepositoryRoot(), relativePath));
+				StringAssert.Contains(text, "UseLayoutRounding=\"True\"");
+				StringAssert.Contains(text, "Background=\"{StaticResource GrfCanvasBrush}\"");
+				StringAssert.Contains(text, "Foreground=\"{StaticResource GrfTextBrush}\"");
+			}
+		}
+
 		private static string FindRepositoryRoot() {
 			DirectoryInfo current = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
 

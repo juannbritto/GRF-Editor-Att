@@ -6,7 +6,7 @@
                  xmlns:SpriteEditorConfiguration="clr-namespace:GRFEditor.Tools.SpriteEditor"
                  xmlns:ListView="clr-namespace:TokeiLibrary.WPF.Styles.ListView;assembly=TokeiLibrary"
 				 ShowInTaskbar="True" SnapsToDevicePixels="True" UseLayoutRounding="True"
-				 Background="{DynamicResource TabItemBackground}" Foreground="{DynamicResource TextForeground}">
+				 Background="{StaticResource GrfCanvasBrush}" Foreground="{StaticResource GrfTextBrush}">
     <Grid AllowDrop="True" DragEnter="_presenter_DragEnter" Drop="_presenter_Drop">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />

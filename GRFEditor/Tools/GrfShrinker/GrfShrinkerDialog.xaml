@@ -6,7 +6,7 @@
 		xmlns:TokeiLibrary="clr-namespace:TokeiLibrary;assembly=TokeiLibrary"
         xmlns:ListView="clr-namespace:TokeiLibrary.WPF.Styles.ListView;assembly=TokeiLibrary"
         xmlns:MultiGrf="clr-namespace:GrfToWpfBridge.MultiGrf;assembly=GrfToWpfBridge"
-		MinHeight="400" Height="400" Width="750" MinWidth="750">
+		MinHeight="400" Height="480" Width="800" MinWidth="750" Background="{StaticResource GrfCanvasBrush}" Foreground="{StaticResource GrfTextBrush}" UseLayoutRounding="True" SnapsToDevicePixels="True">
 	<Grid>
 		<Grid.Resources>
 			<Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource ThemeCheckBoxStyle}">
