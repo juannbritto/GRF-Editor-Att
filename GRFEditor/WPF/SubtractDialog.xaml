@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
         xmlns:Styles="clr-namespace:TokeiLibrary.WPF.Styles;assembly=TokeiLibrary"
         xmlns:TokeiLibrary="clr-namespace:TokeiLibrary;assembly=TokeiLibrary"
-        Background="{DynamicResource TabItemBackground}" Foreground="{DynamicResource TextForeground}">
+        Background="{StaticResource GrfCanvasBrush}" Foreground="{StaticResource GrfTextBrush}" UseLayoutRounding="True" SnapsToDevicePixels="True" MinWidth="520">
     <StackPanel>
         <TextBlock Margin="3" Text="Subtraction cannot be undone. GRF1 - GRF2 = Output" Grid.Row="1" TextWrapping="Wrap"/>
         <Grid>
@@ -25,7 +25,7 @@
             <TextBox Grid.Row="2" Grid.Column="1" Name="_textBoxOutputName" Text="" Margin="3" />
             <Styles:TkProgressBar x:Name="_progressBarComponent" Grid.Row="3" Grid.Column="1" Margin="3" />
         </Grid>
-        <Grid TokeiLibrary:WpfProperties.IsDraggable="True" Grid.Row="2" Height="40" Background="{DynamicResource UIDialogBackground}">
+        <Border TokeiLibrary:WpfProperties.IsDraggable="True" Grid.Row="2" Style="{StaticResource GrfDialogFooter}">
             <Grid Margin="0 0 3 0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="auto" />
@@ -33,10 +33,10 @@
                     <ColumnDefinition Width="auto" />
                 </Grid.ColumnDefinitions>
                 <DockPanel Grid.Column="2">
-                    <Button  Name="_buttonOK" Content="Subtract" Width="100" Height="24" Margin="3" Click="_buttonOK_Click" />
-                    <Button HorizontalAlignment="Right" Name="_buttonCancel" Content="Close" Width="100" Height="24" Margin="3" Click="_buttonCancel_Click" />
+                    <Button Name="_buttonOK" Content="Subtract" Style="{StaticResource GrfDangerButton}" MinWidth="100" Margin="0,0,8,0" Click="_buttonOK_Click" />
+                    <Button HorizontalAlignment="Right" Name="_buttonCancel" Content="Close" Style="{StaticResource GrfSecondaryButton}" MinWidth="100" Click="_buttonCancel_Click" />
                 </DockPanel>
             </Grid>
-        </Grid>
+        </Border>
     </StackPanel>
 </Styles:TkWindow>

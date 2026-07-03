@@ -5,7 +5,8 @@
                  xmlns:TokeiLibrary="clr-namespace:TokeiLibrary;assembly=TokeiLibrary"
                  xmlns:ListView="clr-namespace:TokeiLibrary.WPF.Styles.ListView;assembly=TokeiLibrary"
                  xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit" mc:Ignorable="d" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                 xmlns:WPF1="clr-namespace:GRFEditor.WPF" Height="485" Width="660" Background="{DynamicResource TabItemBackground}" Foreground="{DynamicResource TextForeground}">
+                 xmlns:WPF1="clr-namespace:GRFEditor.WPF" Height="560" Width="760" MinWidth="660" MinHeight="485"
+                 Background="{StaticResource GrfCanvasBrush}" Foreground="{StaticResource GrfTextBrush}" UseLayoutRounding="True" SnapsToDevicePixels="True">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition />
@@ -103,7 +104,7 @@
                 <avalonedit:TextEditor x:Name="_tbPreview"   Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" IsReadOnly="True" />
             </Grid>
         </Grid>
-        <Grid TokeiLibrary:WpfProperties.IsDraggable="True" Grid.Row="1" Height="40" Background="{DynamicResource UIDialogBackground}">
+        <Border TokeiLibrary:WpfProperties.IsDraggable="True" Grid.Row="1" Style="{StaticResource GrfDialogFooter}">
             <Grid Margin="0 0 3 0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="auto" />
@@ -111,9 +112,9 @@
                     <ColumnDefinition Width="auto" />
                 </Grid.ColumnDefinitions>
                 <DockPanel Grid.Column="2">
-                    <Button HorizontalAlignment="Right" Content="Close" Width="100" Height="24" Margin="3" Click="_buttonClose"/>
+                    <Button HorizontalAlignment="Right" Content="Close" Style="{StaticResource GrfPrimaryButton}" MinWidth="100" Click="_buttonClose"/>
                 </DockPanel>
             </Grid>
-        </Grid>
+        </Border>
     </Grid>
 </Styles:TkWindow>

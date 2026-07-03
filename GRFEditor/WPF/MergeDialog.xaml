@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
         xmlns:Styles="clr-namespace:TokeiLibrary.WPF.Styles;assembly=TokeiLibrary"
 		xmlns:TokeiLibrary="clr-namespace:TokeiLibrary;assembly=TokeiLibrary"
-		Background="{StaticResource TabItemBackground}" Foreground="{StaticResource TextForeground}">
+		Background="{StaticResource GrfCanvasBrush}" Foreground="{StaticResource GrfTextBrush}" UseLayoutRounding="True" SnapsToDevicePixels="True" MinWidth="520">
 	<StackPanel>
         <TextBlock Margin="3" Text="Merging cannot be undone." TextWrapping="Wrap" />
         <Grid>
@@ -23,7 +23,7 @@
             <Styles:PathBrowser BrowseMode="File" Name="_pathBrowserNewGrf" Filter="Container Files|*.grf;*.gpf;*.thor" TextChanged="_pathBrowserNewGrf_TextChanged" Grid.Row="1" Grid.Column="1" UseSavePath="True" SavePathUniqueName="GRFEditor - Merge new - " MaxWidth="350" MinWidth="350" />
             <Styles:TkProgressBar x:Name="_progressBarComponent" Grid.Row="3" Grid.Column="1" Margin="3" />
         </Grid>
-        <Grid TokeiLibrary:WpfProperties.IsDraggable="True" Height="40" Background="{DynamicResource UIDialogBackground}">
+        <Border TokeiLibrary:WpfProperties.IsDraggable="True" Style="{StaticResource GrfDialogFooter}">
             <Grid Margin="0 0 3 0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="auto" />
@@ -31,10 +31,10 @@
                     <ColumnDefinition Width="auto" />
                 </Grid.ColumnDefinitions>
                 <DockPanel Grid.Column="2">
-                    <Button  Name="_buttonOK" Content="Merge" Width="100" Height="24" Margin="3" Click="_buttonOK_Click" />
-                    <Button HorizontalAlignment="Right" Name="_buttonCancel" Content="Close" Width="100" Height="24" Margin="3" Click="_buttonCancel_Click" />
+                    <Button Name="_buttonOK" Content="Merge" Style="{StaticResource GrfDangerButton}" MinWidth="100" Margin="0,0,8,0" Click="_buttonOK_Click" />
+                    <Button HorizontalAlignment="Right" Name="_buttonCancel" Content="Close" Style="{StaticResource GrfSecondaryButton}" MinWidth="100" Click="_buttonCancel_Click" />
                 </DockPanel>
             </Grid>
-        </Grid>
+        </Border>
     </StackPanel>
 </Styles:TkWindow>

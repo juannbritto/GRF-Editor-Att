@@ -2,14 +2,14 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:Styles="clr-namespace:TokeiLibrary.WPF.Styles;assembly=TokeiLibrary"
         xmlns:TokeiLibrary="clr-namespace:TokeiLibrary;assembly=TokeiLibrary"
-		Background="{StaticResource TabItemBackground}"  MinWidth="450" MaxWidth="450">
+		Background="{StaticResource GrfCanvasBrush}" Foreground="{StaticResource GrfTextBrush}" MinWidth="480" Width="520" UseLayoutRounding="True" SnapsToDevicePixels="True">
     <StackPanel>
         <TextBox Grid.Row="1" Margin="0 0 0 0" Height="150" IsReadOnly="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Name="_properties" TextWrapping="Wrap" />
 
-        <Grid TokeiLibrary:WpfProperties.IsDraggable="True" Grid.Row="1" Height="40" Background="{DynamicResource UIDialogBackground}">
+        <Border TokeiLibrary:WpfProperties.IsDraggable="True" Grid.Row="1" Style="{StaticResource GrfDialogFooter}">
             <DockPanel HorizontalAlignment="Right" Margin="0 0 3 0">
-                <Button Content="Close" Height="24" Margin="3" Width="100" Click="_buttonClose" />
+                <Button Content="Close" Style="{StaticResource GrfPrimaryButton}" MinWidth="100" Click="_buttonClose" />
             </DockPanel>
-        </Grid>
+        </Border>
     </StackPanel>
 </Styles:TkWindow>

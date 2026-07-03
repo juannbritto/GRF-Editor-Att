@@ -111,6 +111,34 @@ namespace GRF.SafeSave.Tests {
 				"Dialog must contain an explicitly styled primary or secondary action: " + relativePath);
 		}
 
+		[TestMethod]
+		public void Common_operation_dialogs_use_refined_contract_without_losing_named_controls() {
+			string[] dialogs = {
+				Path.Combine("GRFEditor", "WPF", "PropertiesDialog.xaml"),
+				Path.Combine("GRFEditor", "WPF", "SearchDialog.xaml"),
+				Path.Combine("GRFEditor", "WPF", "MergeDialog.xaml"),
+				Path.Combine("GRFEditor", "WPF", "SubtractDialog.xaml"),
+				Path.Combine("GRFEditor", "WPF", "AddFileDialog.xaml"),
+				Path.Combine("GRFEditor", "WPF", "ViewEncodingDialog.xaml")
+			};
+
+			foreach (string dialog in dialogs)
+				AssertDialogContract(dialog);
+
+			AssertNamedControls(dialogs[0], "_properties");
+			AssertNamedControls(dialogs[1], "_tbPreview");
+			AssertNamedControls(dialogs[2], "_pathBrowserOldGrf", "_pathBrowserNewGrf", "_buttonOK", "_buttonCancel");
+			AssertNamedControls(dialogs[3], "_pathBrowserGrf1", "_pathBrowserGrf2", "_textBoxOutputName", "_buttonOK", "_buttonCancel");
+			AssertNamedControls(dialogs[4], "_treeView", "_textBoxSourceFile", "_textBoxGrfPath", "_buttonOK", "_buttonCancel");
+			AssertNamedControls(dialogs[5], "_cbEncodingSource", "_tbSource", "_cbEncodingDest", "_tbDest");
+		}
+
+		private static void AssertNamedControls(string relativePath, params string[] names) {
+			string text = File.ReadAllText(Path.Combine(FindRepositoryRoot(), relativePath));
+			foreach (string name in names)
+				StringAssert.Contains(text, "Name=\"" + name + "\"");
+		}
+
 		private static string FindRepositoryRoot() {
 			DirectoryInfo current = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
 
