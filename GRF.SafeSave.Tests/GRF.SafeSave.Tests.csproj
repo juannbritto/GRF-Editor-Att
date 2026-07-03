@@ -17,4 +17,8 @@
     <ProjectReference Include="..\GRF\GRF.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\GRFEditor\WPF\VisualState\SafeSaveStatusPresentation.cs" Link="SafeSaveStatusPresentation.cs" />
+  </ItemGroup>
+
 </Project>

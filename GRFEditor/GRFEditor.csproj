@@ -248,6 +248,7 @@
     <Compile Include="WPF\SafeSaveReportDialog.xaml.cs">
       <DependentUpon>SafeSaveReportDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="WPF\VisualState\SafeSaveStatusPresentation.cs" />
     <Compile Include="WPF\ESearchResult.cs" />
     <Compile Include="WPF\PreviewTabs\PreviewSprites.xaml.cs">
       <DependentUpon>PreviewSprites.xaml</DependentUpon>
