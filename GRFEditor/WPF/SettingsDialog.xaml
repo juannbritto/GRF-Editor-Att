@@ -8,7 +8,8 @@
         xmlns:Application="clr-namespace:GrfToWpfBridge.Application;assembly=GrfToWpfBridge"
         xmlns:GRF="clr-namespace:GRF.Core;assembly=GRF"
         xmlns:multiGrf="clr-namespace:GrfToWpfBridge.MultiGrf;assembly=GrfToWpfBridge" UseLayoutRounding="True"
-        MaxWidth="500" MinWidth="500" MinHeight="560" MaxHeight="560" Foreground="{DynamicResource TextForeground}" SnapsToDevicePixels="True" >
+        Width="620" MinWidth="560" MinHeight="600" Height="680" Foreground="{StaticResource GrfTextBrush}"
+        Background="{StaticResource GrfCanvasBrush}" SnapsToDevicePixels="True">
 	<Grid>
 		<Grid.Resources>
 			<Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource ThemeCheckBoxStyle}">
@@ -238,10 +239,10 @@
 				</TabItem>
 			</TabControl>
 		</Border>
-        <Grid TokeiLibrary:WpfProperties.IsDraggable="True" Grid.Row="2" Height="40" Background="{DynamicResource UIDialogBackground}">
+        <Border Grid.Row="1" Style="{StaticResource GrfDialogFooter}" TokeiLibrary:WpfProperties.IsDraggable="True">
             <DockPanel HorizontalAlignment="Right" Margin="0 0 3 0">
-                <Button Content="Ok" Height="24" Margin="3" Width="100" Click="_buttonClose" />
+                <Button Content="OK" Style="{StaticResource GrfPrimaryButton}" MinWidth="100" Click="_buttonClose" />
             </DockPanel>
-        </Grid>
+        </Border>
     </Grid>
 </Styles:TkWindow>

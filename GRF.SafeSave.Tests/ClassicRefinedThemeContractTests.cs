@@ -90,6 +90,27 @@ namespace GRF.SafeSave.Tests {
 			StringAssert.Contains(source, "dictionaries.Insert(refinedIndex");
 		}
 
+		[TestMethod]
+		public void Safety_dialogs_use_refined_footer_and_explicit_action_hierarchy() {
+			AssertDialogContract(Path.Combine("GRFEditor", "WPF", "SafeSaveReportDialog.xaml"));
+			AssertDialogContract(Path.Combine("GRFEditor", "WPF", "SettingsDialog.xaml"));
+			AssertDialogContract(Path.Combine("GRFEditor", "Tools", "GrfValidation", "ValidationDialog.xaml"));
+
+			string report = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "GRFEditor", "WPF", "SafeSaveReportDialog.xaml"));
+			foreach (string name in new[] { "_summary", "_reportText", "_temporaries", "_inspect", "_remove" })
+				StringAssert.Contains(report, "Name=\"" + name + "\"");
+			StringAssert.Contains(report, "Style=\"{StaticResource GrfDangerButton}\"");
+		}
+
+		private static void AssertDialogContract(string relativePath) {
+			string text = File.ReadAllText(Path.Combine(FindRepositoryRoot(), relativePath));
+			StringAssert.Contains(text, "UseLayoutRounding=\"True\"");
+			StringAssert.Contains(text, "Style=\"{StaticResource GrfDialogFooter}\"");
+			Assert.IsTrue(text.Contains("Style=\"{StaticResource GrfPrimaryButton}\"") ||
+			              text.Contains("Style=\"{StaticResource GrfSecondaryButton}\""),
+				"Dialog must contain an explicitly styled primary or secondary action: " + relativePath);
+		}
+
 		private static string FindRepositoryRoot() {
 			DirectoryInfo current = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
 

@@ -6,7 +6,8 @@
 		xmlns:TokeiLibrary="clr-namespace:TokeiLibrary;assembly=TokeiLibrary"
         xmlns:ListView="clr-namespace:TokeiLibrary.WPF.Styles.ListView;assembly=TokeiLibrary"
         xmlns:MultiGrf="clr-namespace:GrfToWpfBridge.MultiGrf;assembly=GrfToWpfBridge"
-		MinHeight="400" Height="400" Width="750" MinWidth="750">
+		MinHeight="480" Height="560" Width="820" MinWidth="720" UseLayoutRounding="True" SnapsToDevicePixels="True"
+        Background="{StaticResource GrfCanvasBrush}" Foreground="{StaticResource GrfTextBrush}">
 	<Grid>
 		<Grid.Resources>
 			<Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource ThemeCheckBoxStyle}">
@@ -154,7 +155,7 @@
                 </TabItem>
             </TabControl>
         </Border>
-        <Grid TokeiLibrary:WpfProperties.IsDraggable="True" Grid.Row="1" Height="40" Background="{DynamicResource UIDialogBackground}">
+        <Border TokeiLibrary:WpfProperties.IsDraggable="True" Grid.Row="1" Style="{StaticResource GrfDialogFooter}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="300" />
@@ -162,9 +163,9 @@
                 </Grid.ColumnDefinitions>
                 <Styles:TkProgressBar x:Name="_progressBar" Margin="3 0 0 0" />
                 <DockPanel HorizontalAlignment="Right" Grid.Column="1" Margin="0 0 3 0">
-                    <Button Name="_buttonCancel" Content="Close" Height="24" Width="100" Click="_buttonCancel_Click" Margin="3" />
+                    <Button Name="_buttonCancel" Content="Close" Style="{StaticResource GrfPrimaryButton}" MinWidth="100" Click="_buttonCancel_Click" />
                 </DockPanel>
             </Grid>
-        </Grid>
+        </Border>
     </Grid>
 </Styles:TkWindow>
