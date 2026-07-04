@@ -57,9 +57,27 @@ instalação real, faça backup e valide a cópia no cliente/servidor desejado. 
 Event Horizon, formatos desconhecidos e variantes sem suporte permanecem somente
 para leitura por segurança.
 
-A distribuição lado a lado usa o nome **GRF Editor Safe**, versão `1.6.0.0`. Ela
+A distribuição lado a lado usa o nome **GRF Editor Safe**, versão `1.7.0.0`. Ela
 possui executável, pasta de configuração, atalhos e desinstalador próprios. O
 instalador não assume associações de arquivos do GRF Editor existente.
+
+## Interface clássica refinada
+
+A atualização visual mantém o fluxo tradicional do GRF Editor, mas organiza a
+interface com uma hierarquia mais clara e consistente:
+
+- layout A2 equilibrado com navegação, arquivos e pré-visualização;
+- ações rotineiras `Open` e `Save safely` visíveis, deixando compactação, repack e
+  criptografia nos menus avançados;
+- estado persistente de compatibilidade e salvamento com texto, ícone e cor;
+- estilos compartilhados para botões, rodapés, avisos e ferramentas especializadas;
+- melhor espaço para configurações e validação em escalas atuais do Windows;
+- foco visível, contraste melhorado e ações perigosas visualmente distintas;
+- carregamento do acabamento refinado após o tema-base, inclusive ao trocar o tema.
+
+Essas mudanças reduzem erros de operação e facilitam localizar as ações mais seguras.
+Elas alteram somente a camada WPF: leitura, escrita, compactação, criptografia,
+validação e promoção transacional das GRFs continuam isoladas na biblioteca existente.
 
 ## GRF library (documentação original)
 

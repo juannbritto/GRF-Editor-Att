@@ -1,6 +1,6 @@
 # Validação de compatibilidade do GRF Editor Safe
 
-Data da validação: 2 de julho de 2026.
+Data da validação: 3 de julho de 2026.
 
 ## Amostra clássica
 
@@ -42,3 +42,17 @@ A aceitação pelo cliente e pelo patcher ainda precisa ser confirmada iniciando
 cliente compatível com private server/iRO/rAthena/Hercules contra uma cópia
 descartável da GRF. Nenhum cliente deve ser apontado para a amostra original durante
 essa verificação.
+
+## Validação da interface clássica refinada
+
+- Compilação `Release` concluída para `GRF Editor Safe.exe`.
+- Suíte completa: **136 testes aprovados, 0 falhas e 0 ignorados** com a fixture real configurada.
+- Janela principal verificada com a área A2 equilibrada, três painéis, pesquisa,
+  progresso, estado de compatibilidade e contagem de arquivos.
+- Configurações, validação, merge e diálogos de salvamento verificados sem executar
+  gravação, merge, validação destrutiva ou qualquer outra alteração de arquivo.
+- Ferramentas de mapas, sprites, extração, criptografia, patch, hash, imagem e OpenGL
+  receberam apenas acabamento compartilhado; seus renderizadores e algoritmos não
+  foram modificados.
+- O arquivo original `astegrf2024.grf` permaneceu com SHA-256
+  `a7254c34bd978592b9a2d63523976685d20a56d329ebd97feea8440c62e65446`.
