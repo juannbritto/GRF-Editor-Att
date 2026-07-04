@@ -1,6 +1,6 @@
 ; -- GRF Editor Safe: isolated side-by-side installer --
 
-#define SafeVersion "1.6.0.0"
+#define SafeVersion "1.7.0.0"
 
 [Setup]
 AppId={{D5229D36-6D89-4E2B-B9F9-5D670E366A13}
